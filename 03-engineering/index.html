@@ -1,0 +1,1496 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="深度剖析 Anthropic 如何用 Prompt 驱动世界最复杂的 AI 编程工具">
+      
+      
+        <meta name="author" content="wmc">
+      
+      
+      
+        <link rel="prev" href="../02-architecture/">
+      
+      
+        <link rel="next" href="../04-system-prompt/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>第三章 Prompt 工程机制 - Claude Code Prompt 设计艺术</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans+SC:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans SC";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#prompt" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href=".." title="Claude Code Prompt 设计艺术" class="md-header__button md-logo" aria-label="Claude Code Prompt 设计艺术" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Claude Code Prompt 设计艺术
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              第三章 Prompt 工程机制
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切换至深色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换至深色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切换至浅色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换至浅色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../00-preface/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  前言
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../01-overview/" class="md-tabs__link">
+          
+  
+  
+  正文
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../appendix-a-english/" class="md-tabs__link">
+          
+  
+  
+  附录
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Claude Code Prompt 设计艺术" class="md-nav__button md-logo" aria-label="Claude Code Prompt 设计艺术" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Claude Code Prompt 设计艺术
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../00-preface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    前言
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    正文
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    正文
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第一章 系统概览
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第二章 Prompt 组织架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第三章 Prompt 工程机制
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第三章 Prompt 工程机制
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="本页目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      本页目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#31-prompt-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Prompt Cache 与成本模型
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 Prompt Cache 与成本模型">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prompt-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prompt Cache 的基本原理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        缓存失效的代价
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#32-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 全局缓存 Scope：跨用户共享的静态内容
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#33-feature-flag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Feature Flag 与死代码消除
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.3 Feature Flag 与死代码消除">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#feature" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        注意：feature() 是编译期概念，不是运行时开关
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#34-processenvuser_type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 用户分层：process.env.USER_TYPE
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.4 用户分层：process.env.USER_TYPE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#user_type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        USER_TYPE 的工程实现
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#35" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 启动时并行预取
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#36-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 Prompt 随模型版本演化
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#37" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.7 小结
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-system-prompt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第四章 主系统 Prompt 全解析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-tool-prompts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第五章 工具 Prompt 全解析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-compact-prompts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第六章 压缩摘要 Prompt 全解析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-design-principles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第七章 Prompt 设计的十条核心原则
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    附录
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    附录
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix-a-english/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    附录 A：英文原版 Prompt 完整收录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix-b-chinese/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    附录 B：中文译文完整收录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="本页目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      本页目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#31-prompt-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Prompt Cache 与成本模型
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 Prompt Cache 与成本模型">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prompt-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prompt Cache 的基本原理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        缓存失效的代价
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#32-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 全局缓存 Scope：跨用户共享的静态内容
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#33-feature-flag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Feature Flag 与死代码消除
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.3 Feature Flag 与死代码消除">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#feature" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        注意：feature() 是编译期概念，不是运行时开关
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#34-processenvuser_type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 用户分层：process.env.USER_TYPE
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.4 用户分层：process.env.USER_TYPE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#user_type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        USER_TYPE 的工程实现
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#35" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 启动时并行预取
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#36-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 Prompt 随模型版本演化
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#37" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.7 小结
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="prompt">第三章：Prompt 的工程机制<a class="headerlink" href="#prompt" title="Permanent link">&para;</a></h1>
+<p>第二章介绍了 prompt 的组织架构——它是由什么构成的。本章转向另一个问题：<strong>这套系统是如何被构建和运行的</strong>。</p>
+<p>这里涉及的工程机制，大多数是为了解决同一个核心矛盾：prompt 的内容越丰富，越能引导模型做出正确行为；但 prompt 的体积越大，每次 API 调用的成本越高、延迟越长。Claude Code 通过几个独立的机制来化解这个矛盾，本章逐一解析。</p>
+<hr />
+<h2 id="31-prompt-cache">3.1 Prompt Cache 与成本模型<a class="headerlink" href="#31-prompt-cache" title="Permanent link">&para;</a></h2>
+<p>理解本章其他所有机制的前提，是理解 <strong>Prompt Cache</strong> 的工作原理和成本结构。</p>
+<h3 id="prompt-cache">Prompt Cache 的基本原理<a class="headerlink" href="#prompt-cache" title="Permanent link">&para;</a></h3>
+<p>Anthropic API 支持一种名为 <strong>prompt caching</strong> 的特性：如果两次 API 调用的 system prompt 前缀完全相同，API 会复用之前计算过的 KV（Key-Value）缓存，而不是重新处理这些 token。被缓存命中的 token 称为 <strong>cache read token</strong>，其计费通常只有普通 input token 的 10%；而第一次建立缓存时，需要支付稍高的 <strong>cache write token</strong> 费用（通常是普通 input token 的 125%）。</p>
+<p>对于一个长期运行的对话场景，这个机制可以将 system prompt 部分的成本降低 90%。Claude Code 的 system prompt 展开后约 3,000–4,000 token，在开发者每天高频使用的场景下，这个数字乘以调用次数会变成相当可观的开销。</p>
+<h3 id="_1">缓存失效的代价<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
+<p>缓存的前提是 prompt 前缀不变。一旦 system prompt 的任何部分发生改变（即使只是末尾追加了一行），整个缓存就会失效，下一次调用需要重新建立。这就是为什么 Claude Code 要如此精细地区分哪些内容是稳定的（可以安全地放在缓存区域内），哪些内容是会变化的（必须放在缓存区域之后）。</p>
+<p><strong>一次不必要的缓存失效，代价是：</strong>
+- 重新处理数千个 token（原本可以命中缓存）
+- 触发一次较贵的 cache write 计费（建立新缓存）
+- 下一轮对话才能重新命中缓存</p>
+<p>在高频使用场景下，这个代价会被快速放大。</p>
+<hr />
+<h2 id="32-scope">3.2 全局缓存 Scope：跨用户共享的静态内容<a class="headerlink" href="#32-scope" title="Permanent link">&para;</a></h2>
+<p>Claude Code 在标准 prompt cache 之上，实现了一个更激进的优化：<strong>全局缓存 scope（<code>scope: 'global'</code>）</strong>。</p>
+<p>在标准的 prompt cache 中，缓存是按用户（或 API key）隔离的——用户 A 的缓存对用户 B 不可见。而 <code>scope: 'global'</code> 是 Anthropic API 的一个特殊选项，允许将 system prompt 的某一部分设为跨用户、跨组织共享的全局缓存。只要两个用户发送了完全相同的内容，他们可以共用同一份 KV 缓存。</p>
+<p>这对 Claude Code 来说意义重大：使用相同版本 Claude Code 的所有用户，其 system prompt 的静态部分（角色定义、工具规范、安全约束等）是完全相同的。理论上，全球数十万开发者，只需要有第一个人触发了这份 prompt 的缓存写入，其他所有人都能命中全局缓存，直接以极低成本获得这部分 token 的处理结果。</p>
+<p>这个机制的实现位于 <code>src/utils/api.ts</code> 的 <code>splitSysPromptPrefix</code> 函数：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">splitSysPromptPrefix</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nx">systemPrompt</span><span class="o">:</span><span class="w"> </span><span class="kt">SystemPrompt</span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nx">options</span><span class="o">?:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">skipGlobalCacheForSystemPrompt?</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="nx">SystemPromptBlock</span><span class="p">[]</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">useGlobalCacheFeature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">shouldUseGlobalCacheScope</span><span class="p">()</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="c1">// ...</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">useGlobalCacheFeature</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">boundaryIndex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">systemPrompt</span><span class="p">.</span><span class="nx">findIndex</span><span class="p">(</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">      </span><span class="nx">s</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">s</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="nx">SYSTEM_PROMPT_DYNAMIC_BOUNDARY</span><span class="p">,</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">    </span><span class="p">)</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">boundaryIndex</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">      </span><span class="c1">// ...</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">      </span><span class="kd">const</span><span class="w"> </span><span class="nx">staticJoined</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">staticBlocks</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;\n\n&#39;</span><span class="p">)</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">staticJoined</span><span class="p">)</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">        </span><span class="nx">result</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span><span class="w"> </span><span class="nx">text</span><span class="o">:</span><span class="w"> </span><span class="kt">staticJoined</span><span class="p">,</span><span class="w"> </span><span class="nx">cacheScope</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;global&#39;</span><span class="w"> </span><span class="p">})</span><span class="w">  </span><span class="c1">// ← 全局 scope</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">      </span><span class="kd">const</span><span class="w"> </span><span class="nx">dynamicJoined</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">dynamicBlocks</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;\n\n&#39;</span><span class="p">)</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">dynamicJoined</span><span class="p">)</span><span class="w"> </span><span class="nx">result</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span><span class="w"> </span><span class="nx">text</span><span class="o">:</span><span class="w"> </span><span class="kt">dynamicJoined</span><span class="p">,</span><span class="w"> </span><span class="nx">cacheScope</span><span class="o">:</span><span class="w"> </span><span class="kt">null</span><span class="w"> </span><span class="p">})</span><span class="w">  </span><span class="c1">// ← 不缓存</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">      </span><span class="c1">// ...</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="p">}</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：<code>splitSysPromptPrefix</code> 函数以 <code>SYSTEM_PROMPT_DYNAMIC_BOUNDARY</code> 为分界线，将 prompt 数组切分为静态块和动态块。静态块标记 <code>cacheScope: 'global'</code>（全局缓存），动态块标记 <code>cacheScope: null</code>（不参与跨用户缓存）。这个 scope 最终会对应到 API 请求中的 <code>cache_control</code> 字段。</p>
+</blockquote>
+<p>这也解释了为什么第二章中的 <code>SYSTEM_PROMPT_DYNAMIC_BOUNDARY</code> 注释里会有这样的警告：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="cm">/**</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="cm"> * WARNING: Do not remove or reorder this marker without updating cache logic in:</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="cm"> * - src/utils/api.ts (splitSysPromptPrefix)</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="cm"> * - src/services/api/claude.ts (buildSystemPromptBlocks)</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="cm"> */</span>
+</span></code></pre></div>
+<p>这个标记一旦位置变化，<code>splitSysPromptPrefix</code> 就无法正确识别静态/动态边界，直接导致原本可以全局缓存的内容失去 <code>scope: 'global'</code> 标记。在全球用户规模下，这是一个具有显著成本影响的 bug。</p>
+<hr />
+<h2 id="33-feature-flag">3.3 Feature Flag 与死代码消除<a class="headerlink" href="#33-feature-flag" title="Permanent link">&para;</a></h2>
+<p>Claude Code 使用 Bun 打包器的 <code>bun:bundle</code> 特性来做<strong>编译期死代码消除（Dead Code Elimination, DCE）</strong>。与运行时的 <code>if-else</code> 判断不同，DCE 在打包时就把未激活的代码分支彻底删除，最终的二进制文件中根本不包含这些代码。</p>
+<p>在 <code>src/constants/prompts.ts</code> 文件顶部，可以看到大量这样的模式：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// Dead code elimination: conditional imports for feature-gated modules</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="cm">/* eslint-disable @typescript-eslint/no-require-imports */</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">getCachedMCConfigForFRC</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">feature</span><span class="p">(</span><span class="s1">&#39;CACHED_MICROCOMPACT&#39;</span><span class="p">)</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="o">?</span><span class="w"> </span><span class="p">(</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">      </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../services/compact/cachedMCConfig.js&#39;</span><span class="p">)</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="ow">typeof</span><span class="w"> </span><span class="k">import</span><span class="p">(</span><span class="s1">&#39;../services/compact/cachedMCConfig.js&#39;</span><span class="p">)</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="p">)</span><span class="nx">.getCachedMCConfig</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="o">:</span><span class="w"> </span><span class="kt">null</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="kd">const</span><span class="w"> </span><span class="nx">proactiveModule</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">  </span><span class="nx">feature</span><span class="p">(</span><span class="s1">&#39;PROACTIVE&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">feature</span><span class="p">(</span><span class="s1">&#39;KAIROS&#39;</span><span class="p">)</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">    </span><span class="o">?</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../proactive/index.js&#39;</span><span class="p">)</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">    </span><span class="o">:</span><span class="w"> </span><span class="kc">null</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="kd">const</span><span class="w"> </span><span class="nx">BRIEF_PROACTIVE_SECTION</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">  </span><span class="nx">feature</span><span class="p">(</span><span class="s1">&#39;KAIROS&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">feature</span><span class="p">(</span><span class="s1">&#39;KAIROS_BRIEF&#39;</span><span class="p">)</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">    </span><span class="o">?</span><span class="w"> </span><span class="p">(</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">        </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../tools/BriefTool/prompt.js&#39;</span><span class="p">)</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="ow">typeof</span><span class="w"> </span><span class="k">import</span><span class="p">(</span><span class="s1">&#39;../tools/BriefTool/prompt.js&#39;</span><span class="p">)</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">      </span><span class="p">)</span><span class="nx">.BRIEF_PROACTIVE_SECTION</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">    </span><span class="o">:</span><span class="w"> </span><span class="kt">null</span>
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="kd">const</span><span class="w"> </span><span class="nx">DISCOVER_SKILLS_TOOL_NAME</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">feature</span><span class="p">(</span>
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="w">  </span><span class="s1">&#39;EXPERIMENTAL_SKILL_SEARCH&#39;</span><span class="p">,</span>
+</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="p">)</span>
+</span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="w">  </span><span class="o">?</span><span class="w"> </span><span class="p">(</span>
+</span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="w">      </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../tools/DiscoverSkillsTool/prompt.js&#39;</span><span class="p">)</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="ow">typeof</span><span class="w"> </span><span class="k">import</span><span class="p">(</span><span class="s1">&#39;../tools/DiscoverSkillsTool/prompt.js&#39;</span><span class="p">)</span>
+</span><span id="__span-2-26"><a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="w">    </span><span class="p">)</span><span class="nx">.DISCOVER_SKILLS_TOOL_NAME</span>
+</span><span id="__span-2-27"><a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="w">  </span><span class="o">:</span><span class="w"> </span><span class="kt">null</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：使用 <code>feature()</code> 函数（来自 <code>bun:bundle</code>）做编译期条件判断。当某个 feature 未激活时，整个 <code>require()</code> 调用及其对应的模块代码会在打包阶段被彻底删除，不会出现在最终的发布产物中。<code>proactiveModule</code>、<code>BRIEF_PROACTIVE_SECTION</code>、<code>DISCOVER_SKILLS_TOOL_NAME</code> 等变量在对应 feature 未激活时均为 <code>null</code>，相关的 prompt 内容不会出现在任何用户的 system prompt 中。</p>
+</blockquote>
+<p>这套机制带来了两个直接收益：</p>
+<p><strong>第一，产物体积精简。</strong> 外部发布版本的 Claude Code 不包含 <code>PROACTIVE</code>、<code>KAIROS</code>、<code>EXPERIMENTAL_SKILL_SEARCH</code> 等实验性功能的代码，二进制体积更小，启动更快。</p>
+<p><strong>第二，prompt 内容的版本隔离。</strong> 不同功能配置的用户，收到的 system prompt 在内容上完全不同，而不是靠同一份 prompt 里的条件判断来区别对待。这意味着实验性功能的 prompt 从物理上就不存在于普通用户的运行环境中。</p>
+<h3 id="feature">注意：<code>feature()</code> 是编译期概念，不是运行时开关<a class="headerlink" href="#feature" title="Permanent link">&para;</a></h3>
+<p>这里容易产生误解：<code>feature()</code> 不是一个运行时读取配置文件的函数，它是在打包阶段被 Bun 静态分析和替换的。如果 <code>feature('PROACTIVE')</code> 在打包时被评估为 <code>false</code>，那么 <code>proactiveModule</code> 就是 <code>null</code>，并且任何引用 <code>proactiveModule</code> 的代码路径也会随之被消除。这是真正的编译期优化，与 GrowthBook（运行时 feature flag）是两套完全独立的机制。</p>
+<hr />
+<h2 id="34-processenvuser_type">3.4 用户分层：<code>process.env.USER_TYPE</code><a class="headerlink" href="#34-processenvuser_type" title="Permanent link">&para;</a></h2>
+<p>Claude Code 的 prompt 在多处根据 <code>process.env.USER_TYPE === 'ant'</code> 做差异化处理。<code>ant</code> 指代 Anthropic 内部员工，这个环境变量在内部构建中被设为 <code>'ant'</code>，在外部发布版本中则为其他值（或不存在）。</p>
+<p>这一机制影响了 prompt 的多个具体内容。以注释写作规范为例：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// @[MODEL LAUNCH]: Update comment writing for Capybara — remove or soften once</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="c1">// the model stops over-commenting by default</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="p">...(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">USER_TYPE</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;ant&#39;</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="o">?</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">      </span><span class="sb">`Default to writing no comments. Only add one when the WHY is non-obvious: a hidden constraint, a subtle invariant, a workaround for a specific bug, behavior that would surprise a reader. If removing the comment wouldn&#39;t confuse a future reader, don&#39;t write it.`</span><span class="p">,</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">      </span><span class="sb">`Don&#39;t explain WHAT the code does, since well-named identifiers already do that. Don&#39;t reference the current task, fix, or callers (&quot;used by X&quot;, &quot;added for the Y flow&quot;, &quot;handles the case from issue #123&quot;), since those belong in the PR description and rot as the codebase evolves.`</span><span class="p">,</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">      </span><span class="sb">`Don&#39;t remove existing comments unless you&#39;re removing the code they describe or you know they&#39;re wrong. A comment that looks pointless to you may encode a constraint or a lesson from a past bug that isn&#39;t visible in the current diff.`</span><span class="p">,</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">      </span><span class="c1">// @[MODEL LAUNCH]: capy v8 thoroughness counterweight (PR #24302) — un-gate once validated on external via A/B</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">      </span><span class="sb">`Before reporting a task complete, verify it actually works: run the test, execute the script, check the output. Minimum complexity means no gold-plating, not skipping the finish line. If you can&#39;t verify (no test exists, can&#39;t run the code), say so explicitly rather than claiming success.`</span><span class="p">,</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">    </span><span class="p">]</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">  </span><span class="o">:</span><span class="w"> </span><span class="p">[]),</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：内部用户（<code>USER_TYPE === 'ant'</code>）会看到四条额外的注释规范：默认不写注释、不解释代码做什么（标识符已经说明了）、不轻易删除现有注释（可能编码了历史约束）、完成任务前必须实际验证。这四条规则不出现在外部用户的 prompt 中。旁边的注释表明，这是针对特定模型版本（Capybara）过度注释倾向的专项修复，计划在问题解决后移除或软化。</p>
+</blockquote>
+<p>以及输出效率的差异——内外两个版本可以说是完全不同的风格要求：</p>
+<p><strong>内部用户（<code>ant</code>）</strong>：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">USER_TYPE</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;ant&#39;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="sb">`# Communicating with the user</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="sb">When sending user-facing text, you&#39;re writing for a person, not logging to a console. Assume users can&#39;t see most tool calls or thinking - only your text output. Before your first tool call, briefly state what you&#39;re about to do. While working, give short updates at key moments: when you find something load-bearing (a bug, a root cause), when changing direction, when you&#39;ve made progress without an update.</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="sb">When making updates, assume the person has stepped away and lost the thread. They don&#39;t know codenames, abbreviations, or shorthand you created along the way, and didn&#39;t track your process. Write so they can pick back up cold: use complete, grammatically correct sentences without unexplained jargon. Expand technical terms. Err on the side of more explanation. Attend to cues about the user&#39;s level of expertise; if they seem like an expert, tilt a bit more concise, while if they seem like they&#39;re new, be more explanatory. </span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="sb">Write user-facing text in flowing prose while eschewing fragments, excessive em dashes, symbols and notation, or similarly hard-to-parse content. Only use tables when appropriate; for example to hold short enumerable facts (file names, line numbers, pass/fail), or communicate quantitative data. Don&#39;t pack explanatory reasoning into table cells -- explain before or after. Avoid semantic backtracking: structure each sentence so a person can read it linearly, building up meaning without having to re-parse what came before. </span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="sb">What&#39;s most important is the reader understanding your output without mental overhead or follow-ups, not how terse you are. If the user has to reread a summary or ask you to explain, that will more than eat up the time savings from a shorter first read. Match responses to the task: a simple question gets a direct answer in prose, not headers and numbered sections. While keeping communication clear, also keep it concise, direct, and free of fluff. Avoid filler or stating the obvious. Get straight to the point. Don&#39;t overemphasize unimportant trivia about your process or use superlatives to oversell small wins or losses. Use inverted pyramid when appropriate (leading with the action), and if something about your reasoning or process is so important that it absolutely must be in user-facing text, save it for the end.</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="sb">These user-facing text instructions do not apply to code or tool calls.`</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="p">}</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注（内部用户版）</strong>：</p>
+<p><strong># 与用户沟通</strong></p>
+<p>在发送面向用户的文本时，你是在为一个真实的人写作，而不是在记录控制台日志。假设用户看不到大多数工具调用或思考过程——他们只能看到你的文字输出。在第一次工具调用之前，简要说明你打算做什么。在工作过程中，在关键时刻给出简短的更新：当你发现关键问题（一个 bug、一个根本原因）时，当你改变方向时，当你在没有更新的情况下取得进展时。</p>
+<p>在做更新时，假设这个人已经离开并失去了上下文。他们不知道你在途中创造的代号、缩写或简写，也没有跟踪你的过程。写作时让他们能够重新接上：使用完整的、语法正确的句子，不带无解释的术语，展开技术术语，宁可多解释一些。注意用户专业程度的线索；如果他们看起来是专家，稍微简洁一点；如果他们看起来是新手，多一些解释。</p>
+<p>以流畅的散文书写面向用户的文本，避免使用片段、过多的破折号、符号和记法或类似难以解析的内容。只在适当时使用表格：例如用于保存简短的可枚举事实（文件名、行号、通过/失败）或传达定量数据。不要把解释性推理塞进表格单元格——在前后解释。避免语义回溯：构造每个句子使人可以线性阅读，不需要重新解析之前的内容。</p>
+<p>最重要的是读者在没有脑力开销或后续问题的情况下理解你的输出，而不是你有多简洁。如果用户不得不重新阅读摘要或要求你解释，这将远远超过更短的第一次阅读节省的时间。根据任务匹配回应：一个简单的问题得到散文形式的直接回答，而不是标题和编号部分。在保持清晰的同时，也要保持简洁、直接，没有废话。避免填充语或陈述显而易见的内容。直接切入主题。不要过度强调不重要的过程细节，也不要用最高级词语来过度渲染小的成功或失败。适当时使用倒金字塔（以行动开头），如果关于你的推理或过程的某些内容如此重要以至于绝对必须出现在面向用户的文本中，将其保留到最后。</p>
+<p>这些面向用户的文本说明不适用于代码或工具调用。</p>
+</blockquote>
+<p><strong>外部用户</strong>：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">return</span><span class="w"> </span><span class="sb">`# Output efficiency</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="sb">IMPORTANT: Go straight to the point. Try the simplest approach first without going in circles. Do not overdo it. Be extra concise.</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="sb">Keep your text output brief and direct. Lead with the answer or action, not the reasoning. Skip filler words, preamble, and unnecessary transitions. Do not restate what the user said — just do it. When explaining, include only what is necessary for the user to understand.</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="sb">Focus text output on:</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="sb">- Decisions that need the user&#39;s input</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="sb">- High-level status updates at natural milestones</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="sb">- Errors or blockers that change the plan</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="sb">If you can say it in one sentence, don&#39;t use three. Prefer short, direct sentences over long explanations. This does not apply to code or tool calls.`</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注（外部用户版）</strong>：</p>
+<p><strong># 输出效率</strong></p>
+<p><strong>重要</strong>：直接切入主题。先尝试最简单的方法，不要绕圈子。不要过度。要格外简洁。</p>
+<p>保持文字输出简短直接。以答案或行动开头，而非推理。省略填充词、前言和不必要的过渡。不要重述用户说的话——直接做。解释时，只包含用户理解所必需的内容。</p>
+<p>将文字输出集中在：
+- 需要用户输入的决策
+- 自然里程碑处的高级状态更新
+- 改变计划的错误或阻碍</p>
+<p>如果能用一句话说清楚，就不要用三句话。优先使用简短、直接的句子而非长篇解释。这不适用于代码或工具调用。</p>
+</blockquote>
+<p><strong>这两段 prompt 的差异，揭示了一个重要的设计哲学</strong>：内部用户（工程师和研究员）需要模型在每一步都清晰表达推理和上下文，以便他们能够理解模型的决策过程并发现潜在问题；外部用户则更希望直接得到结果，过多的"思考过程展示"反而是噪音。同一个模型，通过不同的输出风格 prompt，能够呈现出截然不同的沟通特征。</p>
+<h3 id="user_type"><code>USER_TYPE</code> 的工程实现<a class="headerlink" href="#user_type" title="Permanent link">&para;</a></h3>
+<p>代码注释中有一个关键的工程约束值得单独说明：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1">// DCE: `process.env.USER_TYPE === &#39;ant&#39;` is build-time --define. It MUST be</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1">// inlined at each callsite (not hoisted to a const) so the bundler can</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="c1">// constant-fold it to `false` in external builds and eliminate the branch.</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：<code>process.env.USER_TYPE === 'ant'</code> 是构建时通过 <code>--define</code> 注入的编译期常量。它<strong>必须</strong>在每个调用处内联（不能提升为一个 <code>const</code>），这样打包器才能在外部构建时将其常量折叠为 <code>false</code>，从而消除整个分支。</p>
+</blockquote>
+<p>这个注释说明了一个反直觉的代码规范：<strong>你不能用常量来简化代码</strong>。通常的工程直觉是"如果一个表达式在多处使用，应该提取为常量"。但在这里，<code>process.env.USER_TYPE === 'ant'</code> 必须在每个 <code>if</code> 判断处原样出现，不能这样写：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1">// ❌ 错误写法：打包器无法静态分析这个变量</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">isAnt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">USER_TYPE</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;ant&#39;</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">isAnt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+</span></code></pre></div>
+<p>而必须这样：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1">// ✅ 正确写法：打包器可以识别并替换这个表达式</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">USER_TYPE</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;ant&#39;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+</span></code></pre></div>
+<p>原因是 Bun 打包器只能识别直接出现的 <code>process.env.USER_TYPE === 'ant'</code> 模式，并将其替换为 <code>false</code>（在外部构建时），进而消除整个 <code>if</code> 分支。如果先赋值给变量，打包器无法追踪这个变量的来源，就无法做静态替换。这是工程约束驱动代码风格的一个典型案例。</p>
+<hr />
+<h2 id="35">3.5 启动时并行预取<a class="headerlink" href="#35" title="Permanent link">&para;</a></h2>
+<p><code>src/main.tsx</code> 文件的最顶部，在所有 <code>import</code> 语句之前，有三行在视觉上很不起眼、但工程价值显著的代码：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1">// These side-effects must run before all other imports:</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="c1">// 1. profileCheckpoint marks entry before heavy module evaluation begins</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="c1">// 2. startMdmRawRead fires MDM subprocesses (plutil/reg query) so they run in</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="c1">//    parallel with the remaining ~135ms of imports below</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="c1">// 3. startKeychainPrefetch fires both macOS keychain reads (OAuth + legacy API</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="c1">//    key) in parallel — isRemoteManagedSettingsEligible() otherwise reads them</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="c1">//    sequentially via sync spawn inside applySafeConfigEnvironmentVariables()</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="c1">//    (~65ms on every macOS startup)</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">profileCheckpoint</span><span class="p">,</span><span class="w"> </span><span class="nx">profileReport</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;./utils/startupProfiler.js&#39;</span><span class="p">;</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="c1">// eslint-disable-next-line custom-rules/no-top-level-side-effects</span>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="nx">profileCheckpoint</span><span class="p">(</span><span class="s1">&#39;main_tsx_entry&#39;</span><span class="p">);</span>
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">startMdmRawRead</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;./utils/settings/mdm/rawRead.js&#39;</span><span class="p">;</span>
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a>
+</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="c1">// eslint-disable-next-line custom-rules/no-top-level-side-effects</span>
+</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="nx">startMdmRawRead</span><span class="p">();</span>
+</span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">ensureKeychainPrefetchCompleted</span><span class="p">,</span><span class="w"> </span><span class="nx">startKeychainPrefetch</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;./utils/secureStorage/keychainPrefetch.js&#39;</span><span class="p">;</span>
+</span><span id="__span-9-18"><a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a>
+</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a><span class="c1">// eslint-disable-next-line custom-rules/no-top-level-side-effects</span>
+</span><span id="__span-9-20"><a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a><span class="nx">startKeychainPrefetch</span><span class="p">();</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：这三个副作用必须在所有其他 import 之前运行：
+1. <code>profileCheckpoint</code> 在重量级模块求值开始之前标记入口
+2. <code>startMdmRawRead</code> 启动 MDM 子进程（<code>plutil</code>/<code>reg query</code>），让它们与后续约 135ms 的 import 过程并行运行
+3. <code>startKeychainPrefetch</code> 并行触发两次 macOS keychain 读取（OAuth + 旧版 API key）——否则 <code>isRemoteManagedSettingsEligible()</code> 会通过同步子进程调用顺序读取它们（在每次 macOS 启动时约需 65ms）</p>
+</blockquote>
+<p>注释里的数字很关键：<strong>135ms</strong> 和 <strong>65ms</strong>。这两个操作如果顺序执行，会在模块加载期间额外增加 200ms 的等待——对于一个命令行工具来说，这是用户能明显感知到的延迟。通过在 import 开始之前就触发这两个异步操作，它们可以与后续 135ms 的模块加载并行进行，在用户看来，工具的启动时间就缩短了。</p>
+<p>这与 prompt 设计有什么关系？</p>
+<p><strong>直接关系</strong>：system prompt 的动态部分（环境信息、记忆文件）需要从文件系统或系统 API 读取数据。如果等到需要构建 system prompt 时才开始读取，用户需要等待这些 I/O 操作完成。通过预取，这些数据在模块加载期间就已经开始准备，等到构建 system prompt 时，大概率可以直接使用已经就绪的结果。</p>
+<p><strong>间接关系</strong>：预取策略体现了整个系统的设计原则——<strong>用户等待的每一毫秒都是可以被工程优化压缩的</strong>。同样的原则应用于 prompt cache（减少重复计算的 token 开销）、Section 机制（精确控制哪些内容需要重算）和 DCE（减少加载不必要代码的时间）。</p>
+<p>第一次渲染完成之后，还有一轮延迟预取：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="cm">/**</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="cm"> * Start background prefetches and housekeeping that are NOT needed before first render.</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="cm"> * These are deferred from setup() to reduce event loop contention and child process</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="cm"> * spawning during the critical startup path.</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="cm"> * Call this after the REPL has been rendered.</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="cm"> */</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">startDeferredPrefetches</span><span class="p">()</span><span class="o">:</span><span class="w"> </span><span class="ow">void</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="w">  </span><span class="c1">// ...</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="w">  </span><span class="c1">// Process-spawning prefetches (consumed at first API call, user is still typing)</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="w">  </span><span class="ow">void</span><span class="w"> </span><span class="nx">initUser</span><span class="p">();</span>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="w">  </span><span class="ow">void</span><span class="w"> </span><span class="nx">getUserContext</span><span class="p">();</span>
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="w">  </span><span class="nx">prefetchSystemContextIfSafe</span><span class="p">();</span>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="w">  </span><span class="c1">// ...</span>
+</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="w">  </span><span class="ow">void</span><span class="w"> </span><span class="nx">prefetchAwsCredentialsAndBedRockInfoIfSafe</span><span class="p">();</span>
+</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="w">  </span><span class="c1">// ...</span>
+</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a><span class="w">  </span><span class="ow">void</span><span class="w"> </span><span class="nx">prefetchGcpCredentialsIfSafe</span><span class="p">();</span>
+</span><span id="__span-10-17"><a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a><span class="w">  </span><span class="ow">void</span><span class="w"> </span><span class="nx">prefetchOfficialMcpUrls</span><span class="p">();</span>
+</span><span id="__span-10-18"><a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a><span class="p">}</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：启动后台预取和维护工作，这些工作在第一次渲染之前不需要。从 <code>setup()</code> 中延迟，以减少关键启动路径上的事件循环竞争和子进程生成。在 REPL 渲染完成后调用。注释说明：这些预取在"用户还在输入时"完成（consumed at first API call, user is still typing），即利用用户输入第一条消息的时间窗口来预热数据，让第一次 API 调用时就能拿到已缓存的用户上下文、系统上下文等信息。</p>
+</blockquote>
+<p>这个设计思路可以概括为：<strong>把所有 I/O 操作都尽早触发，与用户的人类时间（思考、输入）重叠，而不是让用户等待机器时间</strong>。</p>
+<hr />
+<h2 id="36-prompt">3.6 Prompt 随模型版本演化<a class="headerlink" href="#36-prompt" title="Permanent link">&para;</a></h2>
+<p>本章最后一个机制，也是最能体现 Claude Code prompt 工程本质的一个：<strong>prompt 不是一次性写好的，它随模型版本持续演化</strong>。</p>
+<p>代码中遍布着这样的注释：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1">// @[MODEL LAUNCH]: Update comment writing for Capybara — remove or soften once</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="c1">// the model stops over-commenting by default</span>
+</span></code></pre></div>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1">// @[MODEL LAUNCH]: capy v8 thoroughness counterweight (PR #24302) — un-gate once</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="c1">// validated on external via A/B</span>
+</span></code></pre></div>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1">// @[MODEL LAUNCH]: False-claims mitigation for Capybara v8 (29-30% FC rate vs v4&#39;s 16.7%)</span>
+</span></code></pre></div>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1">// @[MODEL LAUNCH]: Remove this section when we launch numbat.</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：这些注释是"模型发布"标记，记录了某条规则在哪个模型版本中被引入、为什么引入，以及预期在什么条件下可以撤销。例如：Capybara v8 的虚假声明率从 v4 的 16.7% 上升到 29-30%，因此加入了专项规则；Capybara 默认有过度注释的倾向，因此加入了注释规范的压制规则，计划在模型自然改善后移除。</p>
+</blockquote>
+<p>这些注释揭示了 Anthropic 的 prompt 工程工作流：</p>
+<p><strong>第一步，测量失败率。</strong> 不是凭感觉判断"这个模型有问题"，而是有精确的数字——29-30% 的虚假声明率。这需要有完善的评估基础设施和指标体系。</p>
+<p><strong>第二步，定向打补丁。</strong> 针对特定模型的特定缺陷，加入专项的 prompt 规则。这些规则是<strong>临时的</strong>（注释里写明了退出条件），不是永久性的架构决策。</p>
+<p><strong>第三步，A/B 测试验证。</strong> 注释 <code>"un-gate once validated on external via A/B"</code> 说明新加的规则会先在内部用户（<code>USER_TYPE === 'ant'</code>）中测试效果，验证之后再推送到外部用户。这是 <code>user-level</code> 的灰度发布。</p>
+<p><strong>第四步，随新模型迭代清理。</strong> <code>"Remove this section when we launch numbat"</code> 表明他们知道这个规则是当前模型的补丁，新模型（numbat）上线后就可以移除。Prompt 不会无限累积临时补丁。</p>
+<p>这个工作流让 prompt 成为一个<strong>活的系统</strong>，而不是一份静态文档。每次模型更新，都会有一批旧规则被移除，一批新规则被引入，以应对新模型的新特征。</p>
+<hr />
+<h2 id="37">3.7 小结<a class="headerlink" href="#37" title="Permanent link">&para;</a></h2>
+<p>本章介绍了 Claude Code prompt 系统的五个工程机制：</p>
+<table>
+<thead>
+<tr>
+<th>机制</th>
+<th>目的</th>
+<th>核心手段</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Prompt Cache</td>
+<td>降低重复 token 的计算成本</td>
+<td>保持 prompt 前缀稳定</td>
+</tr>
+<tr>
+<td>全局缓存 Scope</td>
+<td>跨用户共享静态内容的缓存</td>
+<td><code>scope: 'global'</code> + 边界标记</td>
+</tr>
+<tr>
+<td>Feature Flag DCE</td>
+<td>不同功能配置间的代码和 prompt 隔离</td>
+<td><code>bun:bundle</code> + <code>feature()</code></td>
+</tr>
+<tr>
+<td>用户分层</td>
+<td>内外用户的 prompt 差异化</td>
+<td><code>process.env.USER_TYPE === 'ant'</code></td>
+</tr>
+<tr>
+<td>并行预取</td>
+<td>降低启动延迟和首次响应延迟</td>
+<td>模块加载期间触发异步 I/O</td>
+</tr>
+</tbody>
+</table>
+<p>这五个机制共同服务于一个目标：<strong>在 prompt 足够详细（能引导正确行为）和足够经济（不产生不必要的成本和延迟）之间取得平衡</strong>。理解了这些机制，就能理解为什么 Claude Code 的 prompt 在设计上总是在精确控制"什么内容在什么时候以什么形式出现"——每一处看似小的设计决策，背后都有可量化的成本或质量考量。</p>
+<hr />
+<blockquote>
+<p><strong>下一章</strong>：工程机制已经完全铺垫好。从第四章开始，我们进入本书的核心内容：逐节分析主系统 prompt 的每个 Section，对每段文本做原文呈现、中文附注和设计解析。</p>
+</blockquote>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../02-architecture/" class="md-footer__link md-footer__link--prev" aria-label="上一页: 第二章 Prompt 组织架构">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                第二章 Prompt 组织架构
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../04-system-prompt/" class="md-footer__link md-footer__link--next" aria-label="下一页: 第四章 主系统 Prompt 全解析">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                第四章 主系统 Prompt 全解析
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "toc.follow", "search.highlight", "search.share", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

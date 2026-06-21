@@ -1,0 +1,1455 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="深度剖析 Anthropic 如何用 Prompt 驱动世界最复杂的 AI 编程工具">
+      
+      
+        <meta name="author" content="wmc">
+      
+      
+      
+        <link rel="prev" href="../01-overview/">
+      
+      
+        <link rel="next" href="../03-engineering/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>第二章 Prompt 组织架构 - Claude Code Prompt 设计艺术</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans+SC:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans SC";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#prompt" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href=".." title="Claude Code Prompt 设计艺术" class="md-header__button md-logo" aria-label="Claude Code Prompt 设计艺术" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Claude Code Prompt 设计艺术
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              第二章 Prompt 组织架构
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切换至深色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换至深色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切换至浅色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换至浅色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../00-preface/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  前言
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../01-overview/" class="md-tabs__link">
+          
+  
+  
+  正文
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../appendix-a-english/" class="md-tabs__link">
+          
+  
+  
+  附录
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Claude Code Prompt 设计艺术" class="md-nav__button md-logo" aria-label="Claude Code Prompt 设计艺术" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Claude Code Prompt 设计艺术
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../00-preface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    前言
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    正文
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    正文
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第一章 系统概览
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第二章 Prompt 组织架构
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第二章 Prompt 组织架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="本页目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      本页目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#21-section" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Section：职责隔离的基本单元
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-section" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 两种 Section：缓存与易失
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-section" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Section 的解析：缓存优先
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#24" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 静态与动态的边界
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#25-getsystemprompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 最终组装：getSystemPrompt 的返回结构
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#26" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 两种路径：普通模式与自主模式
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#27-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.7 工具级 Prompt 的双层结构
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.7 工具级 Prompt 的双层结构">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第一层：description 字段
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#promptts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第二层：详细使用说明（prompt.ts）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#28" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.8 整体结构图
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#29" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.9 小结
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第三章 Prompt 工程机制
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-system-prompt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第四章 主系统 Prompt 全解析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-tool-prompts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第五章 工具 Prompt 全解析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-compact-prompts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第六章 压缩摘要 Prompt 全解析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-design-principles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第七章 Prompt 设计的十条核心原则
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    附录
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    附录
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix-a-english/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    附录 A：英文原版 Prompt 完整收录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix-b-chinese/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    附录 B：中文译文完整收录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="本页目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      本页目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#21-section" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Section：职责隔离的基本单元
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-section" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 两种 Section：缓存与易失
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-section" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Section 的解析：缓存优先
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#24" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 静态与动态的边界
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#25-getsystemprompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.5 最终组装：getSystemPrompt 的返回结构
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#26" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.6 两种路径：普通模式与自主模式
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#27-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.7 工具级 Prompt 的双层结构
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.7 工具级 Prompt 的双层结构">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第一层：description 字段
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#promptts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第二层：详细使用说明（prompt.ts）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#28" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.8 整体结构图
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#29" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.9 小结
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="prompt">第二章：Prompt 的组织架构<a class="headerlink" href="#prompt" title="Permanent link">&para;</a></h1>
+<p>如果你曾经写过一个 LLM 应用，大概率是这样组织 system prompt 的：把所有指令拼成一个字符串，存在某个变量里，每次调用 API 时传过去。这个做法在小型应用里完全够用，但在 Claude Code 这个量级的系统里，它有三个致命问题：</p>
+<p><strong>第一，难以维护。</strong> 当一个字符串同时承担角色定义、安全约束、工具指南、输出格式等十几个职责时，修改任何一处都需要在整段文字里找位置，极易破坏其他部分的逻辑。</p>
+<p><strong>第二，无法按需组合。</strong> 不同的运行模式需要不同的 prompt——自主模式需要"偏向行动"，交互模式需要"谨慎确认"；内部用户需要严格的工程规范，外部用户需要友好的默认行为。一段硬编码的字符串无法灵活应对这些差异。</p>
+<p><strong>第三，缓存效率极低。</strong> Anthropic API 支持 prompt cache，可以将 system prompt 的 token 成本大幅降低。但缓存的前提是 prompt 前缀不变——如果每次调用都因为某个动态值（比如当前时间或工作目录）而改变整段 prompt，缓存就完全失效了。</p>
+<p>Claude Code 的解决方案是把 system prompt 设计成一个<strong>分段组装系统</strong>，每个 segment 独立管理自己的内容、缓存行为和可见范围。本章将详细介绍这个系统的设计。</p>
+<hr />
+<h2 id="21-section">2.1 Section：职责隔离的基本单元<a class="headerlink" href="#21-section" title="Permanent link">&para;</a></h2>
+<p>Claude Code 的 system prompt 由若干<strong>Section</strong>（节）组成。每个 Section 是一个相互独立的字符串片段，只负责一类行为约束。它们在运行时被组装成最终的 system prompt 数组，传给 Anthropic API。</p>
+<p>这一机制的核心定义在 <code>src/constants/systemPromptSections.ts</code>：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kr">type</span><span class="w"> </span><span class="nx">ComputeFn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nb">Promise</span><span class="o">&lt;</span><span class="kt">string</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="kc">null</span><span class="o">&gt;</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kr">type</span><span class="w"> </span><span class="nx">SystemPromptSection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nx">compute</span><span class="o">:</span><span class="w"> </span><span class="kt">ComputeFn</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nx">cacheBreak</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>每个 Section 有三个属性：</p>
+<ul>
+<li><strong><code>name</code></strong>：Section 的唯一标识符，用于在缓存中查找和存储对应的内容</li>
+<li><strong><code>compute</code></strong>：一个函数，调用时返回这个 Section 的实际文字内容（或 <code>null</code>，表示该 Section 在当前配置下不适用）</li>
+<li><strong><code>cacheBreak</code></strong>：布尔值，控制这个 Section 的缓存行为</li>
+</ul>
+<p><code>compute</code> 返回 <code>null</code> 的设计很关键。它意味着 Section 可以根据运行时条件决定自己是否出现——比如语言偏好 Section 只在用户设置了语言时才出现，MCP 指令 Section 只在有连接的 MCP 服务器时才出现。<strong>Section 的"不存在"是一种有意义的状态，而不是错误。</strong></p>
+<hr />
+<h2 id="22-section">2.2 两种 Section：缓存与易失<a class="headerlink" href="#22-section" title="Permanent link">&para;</a></h2>
+<p>创建 Section 有两个工厂函数，设计上刻意形成对比：</p>
+<p><strong><code>systemPromptSection</code></strong>（缓存版）</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="cm">/**</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="cm"> * Create a memoized system prompt section.</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="cm"> * Computed once, cached until /clear or /compact.</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="cm"> */</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">systemPromptSection</span><span class="p">(</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nx">compute</span><span class="o">:</span><span class="w"> </span><span class="kt">ComputeFn</span><span class="p">,</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="nx">SystemPromptSection</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="p">,</span><span class="w"> </span><span class="nx">compute</span><span class="p">,</span><span class="w"> </span><span class="nx">cacheBreak</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="p">}</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：创建一个记忆化的 system prompt 节。计算一次后缓存，直到 <code>/clear</code> 或 <code>/compact</code> 命令被执行时才重新计算。</p>
+</blockquote>
+<p><strong><code>DANGEROUS_uncachedSystemPromptSection</code></strong>（易失版）</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="cm">/**</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="cm"> * Create a volatile system prompt section that recomputes every turn.</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="cm"> * This WILL break the prompt cache when the value changes.</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="cm"> * Requires a reason explaining why cache-breaking is necessary.</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="cm"> */</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">DANGEROUS_uncachedSystemPromptSection</span><span class="p">(</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nx">compute</span><span class="o">:</span><span class="w"> </span><span class="kt">ComputeFn</span><span class="p">,</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="nx">_reason</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="nx">SystemPromptSection</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="p">,</span><span class="w"> </span><span class="nx">compute</span><span class="p">,</span><span class="w"> </span><span class="nx">cacheBreak</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="p">}</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：创建一个每轮都重新计算的易失节。当值发生变化时，<strong>这将会打破 prompt cache</strong>。要求提供一个理由字符串，解释为什么必须打破缓存。</p>
+</blockquote>
+<p>注意两个设计细节：</p>
+<p><strong>第一，函数名使用全大写 <code>DANGEROUS</code>。</strong> 这不是随意的命名风格，而是一个刻意的警告信号——调用这个函数的开发者必须意识到，他们正在做一个有性能代价的决定。在一个有数十个 Section 的系统里，如果开发者不假思索地把所有 Section 都设为易失，就会导致 prompt cache 完全失效，每次 API 调用都要重新处理全部 token。</p>
+<p><strong>第二，<code>_reason</code> 参数在函数体内未被使用（下划线前缀表示有意忽略）。</strong> 它存在的唯一目的是强制调用者写出理由。这是一种代码层面的文档约束——你不是在告诉运行时为什么，而是在告诉下一个阅读这段代码的人为什么。比如：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nx">DANGEROUS_uncachedSystemPromptSection</span><span class="p">(</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="s1">&#39;mcp_instructions&#39;</span><span class="p">,</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">getMcpInstructionsSection</span><span class="p">(</span><span class="nx">mcpClients</span><span class="p">),</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="s1">&#39;MCP servers connect/disconnect between turns&#39;</span><span class="p">,</span><span class="w">  </span><span class="c1">// ← 强制写出的理由</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>这段代码来自 <code>src/constants/prompts.ts</code>，对应的注释进一步解释了设计背景：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>// When delta enabled, instructions are announced via persisted
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>// mcp_instructions_delta attachments (attachments.ts) instead of this
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>// per-turn recompute, which busts the prompt cache on late MCP connect.
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>// Gate check inside compute (not selecting between section variants)
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>// so a mid-session gate flip doesn&#39;t read a stale cached value.
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：当 delta 功能启用时，指令通过持久化的 <code>mcp_instructions_delta</code> 附件（attachments.ts）来传达，而不是用这个每轮重算的方式——因为后者会在 MCP 服务器延迟连接时打破 prompt cache。检查 gate 条件放在 compute 函数内部（而非在两个 section 变体之间选择），是为了防止在会话中途的 gate 切换读到过期的缓存值。</p>
+</blockquote>
+<p>这段注释展示了 Anthropic 工程师的思考层次：他们不只是"MCP 在运行时可能变化，所以用易失 Section"，而是精确地分析了在什么条件下易失是必要的（MCP 服务器的晚期连接），并且在更优解可用时（<code>delta</code> 机制）转向它。这种对缓存成本的精细核算贯穿了整个 prompt 工程的实现。</p>
+<hr />
+<h2 id="23-section">2.3 Section 的解析：缓存优先<a class="headerlink" href="#23-section" title="Permanent link">&para;</a></h2>
+<p>所有 Section 的实际内容解析由 <code>resolveSystemPromptSections</code> 完成：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="cm">/**</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="cm"> * Resolve all system prompt sections, returning prompt strings.</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="cm"> */</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">export</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">resolveSystemPromptSections</span><span class="p">(</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span><span class="nx">sections</span><span class="o">:</span><span class="w"> </span><span class="kt">SystemPromptSection</span><span class="p">[],</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="nb">Promise</span><span class="o">&lt;</span><span class="p">(</span><span class="kt">string</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="kc">null</span><span class="p">)[]</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">cache</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">getSystemPromptSectionCache</span><span class="p">()</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nb">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">    </span><span class="nx">sections</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="k">async</span><span class="w"> </span><span class="nx">s</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">s</span><span class="p">.</span><span class="nx">cacheBreak</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">cache</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">name</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">cache</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">name</span><span class="p">)</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="kc">null</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">      </span><span class="p">}</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">      </span><span class="kd">const</span><span class="w"> </span><span class="nx">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">s</span><span class="p">.</span><span class="nx">compute</span><span class="p">()</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">      </span><span class="nx">setSystemPromptSectionCacheEntry</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="p">)</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="nx">value</span>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="w">    </span><span class="p">}),</span>
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="w">  </span><span class="p">)</span>
+</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="p">}</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：解析所有 system prompt 节，返回 prompt 字符串数组。对每个 section，如果它不是易失的（<code>!s.cacheBreak</code>）且缓存中有值，则直接返回缓存；否则调用 <code>compute()</code> 函数重新计算，并将结果存入缓存。</p>
+</blockquote>
+<p>这段代码很简洁，但逻辑层次清晰：</p>
+<ol>
+<li>获取当前的 Section 缓存（存储在全局 state 中，随 <code>/clear</code> 或 <code>/compact</code> 重置）</li>
+<li>对每个 Section 并行处理（<code>Promise.all</code>）</li>
+<li>缓存命中 → 直接返回；缓存未命中或 <code>cacheBreak: true</code> → 重新计算，存入缓存</li>
+</ol>
+<p><code>Promise.all</code> 的使用意味着所有需要重新计算的 Section 是<strong>并发</strong>执行的，而不是顺序等待。在一次对话的早期，可能有多个 Section 需要同时从文件系统或配置中读取数据，并发执行可以显著降低准备 prompt 的延迟。</p>
+<hr />
+<h2 id="24">2.4 静态与动态的边界<a class="headerlink" href="#24" title="Permanent link">&para;</a></h2>
+<p>在 Section 机制之上，还有一个更粗粒度的划分：<strong>静态内容</strong>和<strong>动态内容</strong>的边界。</p>
+<p>这个边界由一个特殊的字符串常量标记：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="cm">/**</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="cm"> * Boundary marker separating static (cross-org cacheable) content from dynamic content.</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="cm"> * Everything BEFORE this marker in the system prompt array can use scope: &#39;global&#39;.</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="cm"> * Everything AFTER contains user/session-specific content and should not be cached.</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="cm"> *</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="cm"> * WARNING: Do not remove or reorder this marker without updating cache logic in:</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="cm"> * - src/utils/api.ts (splitSysPromptPrefix)</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="cm"> * - src/services/api/claude.ts (buildSystemPromptBlocks)</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="cm"> */</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">SYSTEM_PROMPT_DYNAMIC_BOUNDARY</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">  </span><span class="s1">&#39;__SYSTEM_PROMPT_DYNAMIC_BOUNDARY__&#39;</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：分隔静态内容（可跨组织缓存）和动态内容的边界标记。此标记<strong>之前</strong>的所有内容可以使用 <code>scope: 'global'</code>（全局缓存）。此标记<strong>之后</strong>的内容包含用户/会话特定信息，不应被缓存。<strong>警告</strong>：在不更新 <code>src/utils/api.ts</code> 和 <code>src/services/api/claude.ts</code> 中相关缓存逻辑的情况下，不得移除或重新排序此标记。</p>
+</blockquote>
+<p>这个注释的最后一行是工程纪律的体现：这个字符串常量不只是一个占位符，它在运行时被代码逻辑识别和处理，牵连着两个文件中的缓存构建逻辑。移动它不是在改文字，而是在改系统行为。</p>
+<p><strong>静态内容</strong>（边界之前）是那些在同一版本的 Claude Code 里几乎不会变化的指令：角色定义、工具使用规范、代码风格要求、安全约束。这些内容可以使用 <code>scope: 'global'</code>，意味着它们的缓存可以跨不同用户、不同组织共享——只要使用相同版本的 Claude Code，任何人第一次调用时都会计算，之后所有人都能命中缓存。</p>
+<p><strong>动态内容</strong>（边界之后）是那些随用户或会话变化的信息：当前工作目录、操作系统版本、用户的语言偏好、记忆内容、MCP 服务器指令。这些内容只能做会话级缓存，不能跨用户共享。</p>
+<p>这种分层设计的意义在于：Anthropic 可以通过精细控制哪些内容进入"全局缓存区域"，来最大化缓存命中率。理论上，所有使用相同版本 Claude Code 的用户，在发起第一次对话后，其后续对话的静态 prompt 部分都可以从缓存中读取，而不需要重新计算和传输这些 token。</p>
+<hr />
+<h2 id="25-getsystemprompt">2.5 最终组装：<code>getSystemPrompt</code> 的返回结构<a class="headerlink" href="#25-getsystemprompt" title="Permanent link">&para;</a></h2>
+<p>把以上机制放在一起，<code>getSystemPrompt</code> 函数的最终返回结构如下（来自 <code>src/constants/prompts.ts</code>）：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">return</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="c1">// --- Static content (cacheable) ---</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nx">getSimpleIntroSection</span><span class="p">(</span><span class="nx">outputStyleConfig</span><span class="p">),</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="nx">getSimpleSystemSection</span><span class="p">(),</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span><span class="nx">outputStyleConfig</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">||</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span><span class="nx">outputStyleConfig</span><span class="p">.</span><span class="nx">keepCodingInstructions</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="kc">true</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">    </span><span class="o">?</span><span class="w"> </span><span class="nx">getSimpleDoingTasksSection</span><span class="p">()</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">    </span><span class="o">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">  </span><span class="nx">getActionsSection</span><span class="p">(),</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">  </span><span class="nx">getUsingYourToolsSection</span><span class="p">(</span><span class="nx">enabledTools</span><span class="p">),</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">  </span><span class="nx">getSimpleToneAndStyleSection</span><span class="p">(),</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">  </span><span class="nx">getOutputEfficiencySection</span><span class="p">(),</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">  </span><span class="c1">// === BOUNDARY MARKER - DO NOT MOVE OR REMOVE ===</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="w">  </span><span class="p">...(</span><span class="nx">shouldUseGlobalCacheScope</span><span class="p">()</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="p">[</span><span class="nx">SYSTEM_PROMPT_DYNAMIC_BOUNDARY</span><span class="p">]</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="p">[]),</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="w">  </span><span class="c1">// --- Dynamic content (registry-managed) ---</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="w">  </span><span class="p">...</span><span class="nx">resolvedDynamicSections</span><span class="p">,</span>
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="p">].</span><span class="nx">filter</span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">s</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：最终返回值是一个字符串数组，由静态内容和动态内容两部分组成，以边界标记分隔。<code>null</code> 值在最后被过滤掉，因此不适用的 Section 自动从最终 prompt 中消失。</p>
+</blockquote>
+<p>几个值得注意的细节：</p>
+<p><strong>第一，<code>getSimpleDoingTasksSection()</code> 的条件判断</strong>。当用户设置了自定义输出风格（<code>outputStyleConfig !== null</code>），并且该风格的 <code>keepCodingInstructions</code> 不为 <code>true</code> 时，整个编码规范 Section 都会被省略。这说明 prompt 的某些组成部分是可以被用户自定义的输出风格完全替换掉的。</p>
+<p><strong>第二，<code>shouldUseGlobalCacheScope()</code> 的条件判断</strong>。边界标记并非在所有情况下都插入——它只在全局缓存 scope 被支持时才出现。这意味着在某些配置（比如不支持全局缓存的部署环境）下，整个静态/动态分层机制会退化为更简单的形式。</p>
+<p><strong>第三，<code>.filter(s =&gt; s !== null)</code></strong>。这是整个组装系统的"清洁"步骤，把所有不适用的 Section（返回 <code>null</code> 的）从最终数组中移除。结果是一个纯净的字符串数组，每个元素都是真实的 prompt 文本。</p>
+<hr />
+<h2 id="26">2.6 两种路径：普通模式与自主模式<a class="headerlink" href="#26" title="Permanent link">&para;</a></h2>
+<p>值得特别说明的是，上述组装流程只是 <code>getSystemPrompt</code> 函数的<strong>普通模式路径</strong>。在自主模式（Proactive/Kairos）激活时，函数会走一条完全不同的路径，直接返回一套精简的 prompt：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="p">(</span><span class="nx">feature</span><span class="p">(</span><span class="s1">&#39;PROACTIVE&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">feature</span><span class="p">(</span><span class="s1">&#39;KAIROS&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span><span class="nx">proactiveModule</span><span class="o">?</span><span class="p">.</span><span class="nx">isProactiveActive</span><span class="p">()</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">    </span><span class="sb">`\nYou are an autonomous agent. Use the available tools to do useful work.\n\n</span><span class="si">${</span><span class="nx">CYBER_RISK_INSTRUCTION</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">    </span><span class="nx">getSystemRemindersSection</span><span class="p">(),</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">    </span><span class="k">await</span><span class="w"> </span><span class="nx">loadMemoryPrompt</span><span class="p">(),</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">    </span><span class="nx">envInfo</span><span class="p">,</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">    </span><span class="nx">getLanguageSection</span><span class="p">(</span><span class="nx">settings</span><span class="p">.</span><span class="nx">language</span><span class="p">),</span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="w">    </span><span class="nx">getMcpInstructionsSection</span><span class="p">(</span><span class="nx">mcpClients</span><span class="p">),</span>
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">    </span><span class="nx">getScratchpadInstructions</span><span class="p">(),</span>
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="w">    </span><span class="nx">getFunctionResultClearingSection</span><span class="p">(</span><span class="nx">model</span><span class="p">),</span>
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="w">    </span><span class="nx">SUMMARIZE_TOOL_RESULTS_SECTION</span><span class="p">,</span>
+</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="w">    </span><span class="nx">getProactiveSection</span><span class="p">(),</span>
+</span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="w">  </span><span class="p">].</span><span class="nx">filter</span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">s</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span>
+</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="p">}</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：当自主模式（PROACTIVE 或 KAIROS feature flag）激活时，系统 prompt 走完全不同的路径，返回一套精简版的自主模式专用 prompt，角色定义简化为"你是一个自主 Agent，使用可用工具做有用的工作"，并附加自主模式特有的行为指南节（<code>getProactiveSection()</code>）。</p>
+</blockquote>
+<p>这一设计说明：<strong>Claude Code 不是"同一个 AI 在不同场景下"，而是在不同配置下使用完全不同的 prompt 体系</strong>。普通模式的 prompt 强调谨慎、确认、不越权；自主模式的 prompt 强调行动、主动探索、减少停顿。这两套 prompt 体系从角色定义就开始分叉，不存在共用的"基础版本"。</p>
+<hr />
+<h2 id="27-prompt">2.7 工具级 Prompt 的双层结构<a class="headerlink" href="#27-prompt" title="Permanent link">&para;</a></h2>
+<p>在 system prompt 之外，Claude Code 还有另一个维度的 prompt：<strong>工具级 prompt</strong>。每个工具有两层 prompt 内容，服务于不同的用途。</p>
+<h3 id="description">第一层：<code>description</code> 字段<a class="headerlink" href="#description" title="Permanent link">&para;</a></h3>
+<p><code>description</code> 是传入 Anthropic API 的工具描述，模型在决定调用哪个工具时依赖它。它需要简洁，通常在一到几行之间，告诉模型这个工具是干什么的、何时应该使用。</p>
+<p>以 GlobTool 为例（<code>src/tools/GlobTool/prompt.ts</code>）：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">DESCRIPTION</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`- Fast file pattern matching tool that works with any codebase size</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="sb">- Supports glob patterns like &quot;**/*.js&quot; or &quot;src/**/*.ts&quot;</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="sb">- Returns matching file paths sorted by modification time</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="sb">- Use this tool when you need to find files by name patterns</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="sb">- When you are doing an open ended search that may require multiple rounds of globbing and grepping, use the Agent tool instead`</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：快速文件模式匹配工具，适用于任何规模的代码库。支持 glob 模式，如 <code>**/*.js</code> 或 <code>src/**/*.ts</code>。返回按修改时间排序的匹配文件路径。当需要通过文件名模式查找文件时使用此工具。当进行需要多轮 glob 和 grep 的开放式搜索时，改用 Agent 工具。</p>
+</blockquote>
+<p>GrepTool 的 description 更复杂，还包含了使用约束（<code>src/tools/GrepTool/prompt.ts</code>）：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">getDescription</span><span class="p">()</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="sb">`A powerful search tool built on ripgrep</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="sb">  Usage:</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="sb">  - ALWAYS use </span><span class="si">${</span><span class="nx">GREP_TOOL_NAME</span><span class="si">}</span><span class="sb"> for search tasks. NEVER invoke \`grep\` or \`rg\` as a </span><span class="si">${</span><span class="nx">BASH_TOOL_NAME</span><span class="si">}</span><span class="sb"> command. The </span><span class="si">${</span><span class="nx">GREP_TOOL_NAME</span><span class="si">}</span><span class="sb"> tool has been optimized for correct permissions and access.</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="sb">  - Supports full regex syntax (e.g., &quot;log.*Error&quot;, &quot;function\\s+\\w+&quot;)</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="sb">  - Filter files with glob parameter (e.g., &quot;*.js&quot;, &quot;**/*.tsx&quot;) or type parameter (e.g., &quot;js&quot;, &quot;py&quot;, &quot;rust&quot;)</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="sb">  - Output modes: &quot;content&quot; shows matching lines, &quot;files_with_matches&quot; shows only file paths (default), &quot;count&quot; shows match counts</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="sb">  - Use </span><span class="si">${</span><span class="nx">AGENT_TOOL_NAME</span><span class="si">}</span><span class="sb"> tool for open-ended searches requiring multiple rounds</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="sb">  - Pattern syntax: Uses ripgrep (not grep) - literal braces need escaping (use \`interface\\{\\}\` to find \`interface{}\` in Go code)</span>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="sb">  - Multiline matching: By default patterns match within single lines only. For cross-line patterns like \`struct \\{[\\s\\S]*?field\`, use \`multiline: true\`</span>
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="sb">`</span>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="p">}</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：基于 ripgrep 的强大搜索工具。使用说明：搜索任务<strong>始终</strong>使用 Grep 工具，<strong>绝不</strong>通过 Bash 命令调用 <code>grep</code> 或 <code>rg</code>，Grep 工具已针对正确的权限和访问做了优化。支持完整正则语法。可通过 glob 或文件类型过滤。多种输出模式：<code>content</code> 显示匹配行，<code>files_with_matches</code> 只显示文件路径（默认），<code>count</code> 显示匹配数量。开放式多轮搜索使用 Agent 工具。模式语法使用 ripgrep 规则（非 grep）——字面大括号需要转义。多行匹配默认仅在单行内匹配，跨行模式需设置 <code>multiline: true</code>。</p>
+</blockquote>
+<p>注意 GrepTool description 的写法：它不仅说"我是什么"，还明确说"什么情况下<strong>不该</strong>用我（转而用 Agent 工具）"以及"ALWAYS...NEVER"这种强约束。这是 description 里就在做行为约束，而不是把所有约束都推到 system prompt 里。</p>
+<h3 id="promptts">第二层：详细使用说明（<code>prompt.ts</code>）<a class="headerlink" href="#promptts" title="Permanent link">&para;</a></h3>
+<p>Description 只是工具的"名片"。真正详细的行为规范存放在各工具目录下的 <code>prompt.ts</code> 文件中，这些内容通过 system prompt 或工具使用上下文传递给模型，告诉它工具的参数语义、边界情况、禁止操作、步骤顺序等。</p>
+<p>以 FileReadTool 为例，其 <code>renderPromptTemplate</code> 函数会生成这样的内容：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>Reads a file from the local filesystem. You can access any file directly by using this tool.
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>Assume this tool is able to read all files on the machine. If the User provides a path to a
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>file assume that path is valid. It is okay to read a file that does not exist; an error will
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>be returned.
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>Usage:
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>- The file_path parameter must be an absolute path, not a relative path
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>- By default, it reads up to 2000 lines starting from the beginning of the file
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>...
+</span></code></pre></div>
+<p>BashTool 的 <code>prompt.ts</code> 则长达 369 行，包含 Git 安全协议、沙箱约束、commit 步骤化流程、PR 创建指引等完整规范。这是"工具使用手册"维度最丰富的一个，将在第五章作为第一档工具的第一个案例详细分析。</p>
+<p><strong>Description 与使用说明的关系可以这样理解</strong>：Description 决定模型是否选择这个工具，使用说明决定模型如何正确使用这个工具。两者服务于不同的决策时刻，缺一不可。</p>
+<hr />
+<h2 id="28">2.8 整体结构图<a class="headerlink" href="#28" title="Permanent link">&para;</a></h2>
+<p>把本章的所有层次放在一起，Claude Code 的 prompt 架构如下：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>┌──────────────────────────────────────────────────────────────────┐
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>│                      最终 API 请求                                │
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>│                                                                  │
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>│  system: [                                                       │
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>│    ┌────────────────────────────────────────────────────────┐   │
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>│    │              静态 Sections（可全局缓存）                 │   │
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>│    │                                                        │   │
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>│    │  · getSimpleIntroSection()     角色定义                 │   │
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>│    │  · getSimpleSystemSection()    系统规则                 │   │
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>│    │  · getSimpleDoingTasksSection() 任务执行规范             │   │
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>│    │  · getActionsSection()         高危操作决策             │   │
+</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>│    │  · getUsingYourToolsSection()  工具选择逻辑             │   │
+</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>│    │  · getSimpleToneAndStyleSection() 输出风格              │   │
+</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>│    │  · getOutputEfficiencySection() 输出效率                │   │
+</span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a>│    └────────────────────────────────────────────────────────┘   │
+</span><span id="__span-12-16"><a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a>│                    SYSTEM_PROMPT_DYNAMIC_BOUNDARY                │
+</span><span id="__span-12-17"><a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a>│    ┌────────────────────────────────────────────────────────┐   │
+</span><span id="__span-12-18"><a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a>│    │           动态 Sections（会话级缓存或每轮重算）           │   │
+</span><span id="__span-12-19"><a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a>│    │                                                        │   │
+</span><span id="__span-12-20"><a id="__codelineno-12-20" name="__codelineno-12-20" href="#__codelineno-12-20"></a>│    │  · session_guidance    会话级动态指导（缓存）            │   │
+</span><span id="__span-12-21"><a id="__codelineno-12-21" name="__codelineno-12-21" href="#__codelineno-12-21"></a>│    │  · memory              用户记忆（缓存）                  │   │
+</span><span id="__span-12-22"><a id="__codelineno-12-22" name="__codelineno-12-22" href="#__codelineno-12-22"></a>│    │  · env_info_simple     环境信息（缓存）                  │   │
+</span><span id="__span-12-23"><a id="__codelineno-12-23" name="__codelineno-12-23" href="#__codelineno-12-23"></a>│    │  · language            语言偏好（缓存）                  │   │
+</span><span id="__span-12-24"><a id="__codelineno-12-24" name="__codelineno-12-24" href="#__codelineno-12-24"></a>│    │  · output_style        输出风格配置（缓存）              │   │
+</span><span id="__span-12-25"><a id="__codelineno-12-25" name="__codelineno-12-25" href="#__codelineno-12-25"></a>│    │  · mcp_instructions    MCP 指令（每轮重算）◀─DANGEROUS  │   │
+</span><span id="__span-12-26"><a id="__codelineno-12-26" name="__codelineno-12-26" href="#__codelineno-12-26"></a>│    │  · scratchpad          草稿空间指令（缓存）              │   │
+</span><span id="__span-12-27"><a id="__codelineno-12-27" name="__codelineno-12-27" href="#__codelineno-12-27"></a>│    │  · frc                 结果清理提示（缓存）              │   │
+</span><span id="__span-12-28"><a id="__codelineno-12-28" name="__codelineno-12-28" href="#__codelineno-12-28"></a>│    └────────────────────────────────────────────────────────┘   │
+</span><span id="__span-12-29"><a id="__codelineno-12-29" name="__codelineno-12-29" href="#__codelineno-12-29"></a>│  ]                                                               │
+</span><span id="__span-12-30"><a id="__codelineno-12-30" name="__codelineno-12-30" href="#__codelineno-12-30"></a>│                                                                  │
+</span><span id="__span-12-31"><a id="__codelineno-12-31" name="__codelineno-12-31" href="#__codelineno-12-31"></a>│  tools: [                                                        │
+</span><span id="__span-12-32"><a id="__codelineno-12-32" name="__codelineno-12-32" href="#__codelineno-12-32"></a>│    { name: &quot;Bash&quot;,     description: &quot;...&quot;, input_schema: {...} } │
+</span><span id="__span-12-33"><a id="__codelineno-12-33" name="__codelineno-12-33" href="#__codelineno-12-33"></a>│    { name: &quot;Read&quot;,     description: &quot;...&quot;, input_schema: {...} } │
+</span><span id="__span-12-34"><a id="__codelineno-12-34" name="__codelineno-12-34" href="#__codelineno-12-34"></a>│    { name: &quot;Edit&quot;,     description: &quot;...&quot;, input_schema: {...} } │
+</span><span id="__span-12-35"><a id="__codelineno-12-35" name="__codelineno-12-35" href="#__codelineno-12-35"></a>│    ... （43个工具，每个都有自己的description）                     │
+</span><span id="__span-12-36"><a id="__codelineno-12-36" name="__codelineno-12-36" href="#__codelineno-12-36"></a>│  ]                                                               │
+</span><span id="__span-12-37"><a id="__codelineno-12-37" name="__codelineno-12-37" href="#__codelineno-12-37"></a>│                                                                  │
+</span><span id="__span-12-38"><a id="__codelineno-12-38" name="__codelineno-12-38" href="#__codelineno-12-38"></a>│  messages: [ 对话历史 ]                                           │
+</span><span id="__span-12-39"><a id="__codelineno-12-39" name="__codelineno-12-39" href="#__codelineno-12-39"></a>└──────────────────────────────────────────────────────────────────┘
+</span></code></pre></div>
+<hr />
+<h2 id="29">2.9 小结<a class="headerlink" href="#29" title="Permanent link">&para;</a></h2>
+<p>本章揭示了 Claude Code prompt 的三层架构：</p>
+<p><strong>第一层：System Prompt 的 Section 机制。</strong> 通过 <code>systemPromptSection</code> 和 <code>DANGEROUS_uncachedSystemPromptSection</code> 两个工厂函数，将 system prompt 分解为独立的、可缓存的、按需激活的单元。函数名中的 <code>DANGEROUS</code> 是设计者对调用者施加的工程约束，而非单纯的命名风格。</p>
+<p><strong>第二层：静态/动态边界。</strong> <code>SYSTEM_PROMPT_DYNAMIC_BOUNDARY</code> 将 prompt 分为可全局缓存的稳定内容和必须动态计算的用户特定内容，让缓存机制能够最大化复用率。</p>
+<p><strong>第三层：工具级双层 Prompt。</strong> 每个工具有简短的 <code>description</code>（决定模型是否调用它）和详细的使用说明（决定模型如何调用它）。两者服务于不同的决策时刻，设计原则也不同。</p>
+<p>理解了这个架构，后续章节对具体 prompt 内容的分析就有了结构上的坐标系。第四章开始的所有 Section 分析，都将对应到上面图中的某个具体位置。</p>
+<hr />
+<blockquote>
+<p><strong>下一章</strong>：我们将深入 prompt 的工程机制，分析 Prompt Cache 的成本模型、Feature Flag 如何实现死代码消除、用户分层如何产生差异化行为，以及启动时并行预取如何降低首次响应延迟。</p>
+</blockquote>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../01-overview/" class="md-footer__link md-footer__link--prev" aria-label="上一页: 第一章 系统概览">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                第一章 系统概览
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../03-engineering/" class="md-footer__link md-footer__link--next" aria-label="下一页: 第三章 Prompt 工程机制">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                第三章 Prompt 工程机制
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "toc.follow", "search.highlight", "search.share", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

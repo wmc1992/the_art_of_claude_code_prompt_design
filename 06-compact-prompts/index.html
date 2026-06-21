@@ -1,0 +1,1826 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="深度剖析 Anthropic 如何用 Prompt 驱动世界最复杂的 AI 编程工具">
+      
+      
+        <meta name="author" content="wmc">
+      
+      
+      
+        <link rel="prev" href="../05-tool-prompts/">
+      
+      
+        <link rel="next" href="../07-design-principles/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>第六章 压缩摘要 Prompt 全解析 - Claude Code Prompt 设计艺术</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans+SC:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans SC";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#prompt" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href=".." title="Claude Code Prompt 设计艺术" class="md-header__button md-logo" aria-label="Claude Code Prompt 设计艺术" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Claude Code Prompt 设计艺术
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              第六章 压缩摘要 Prompt 全解析
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切换至深色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换至深色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切换至浅色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换至浅色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../00-preface/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  前言
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../01-overview/" class="md-tabs__link">
+          
+  
+  
+  正文
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../appendix-a-english/" class="md-tabs__link">
+          
+  
+  
+  附录
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Claude Code Prompt 设计艺术" class="md-nav__button md-logo" aria-label="Claude Code Prompt 设计艺术" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Claude Code Prompt 设计艺术
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../00-preface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    前言
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    正文
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    正文
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第一章 系统概览
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第二章 Prompt 组织架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第三章 Prompt 工程机制
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-system-prompt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第四章 主系统 Prompt 全解析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-tool-prompts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第五章 工具 Prompt 全解析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第六章 压缩摘要 Prompt 全解析
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第六章 压缩摘要 Prompt 全解析
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="本页目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      本页目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#61" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 三层压缩架构概览
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#62-no_tools_preamble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 NO_TOOLS_PREAMBLE：关键约束的双重封锁
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#63-detailed_analysis_instruction_base" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 DETAILED_ANALYSIS_INSTRUCTION_BASE：引导式分析模板
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#64-base_compact_prompt-9-section" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 BASE_COMPACT_PROMPT：全量压缩的 9 个 Section
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#65-partial_compact_prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.5 PARTIAL_COMPACT_PROMPT：局部压缩变体
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#66-partial_compact_up_to_prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.6 PARTIAL_COMPACT_UP_TO_PROMPT：反向压缩变体
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#67-no_tools_trailer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.7 NO_TOOLS_TRAILER：尾部重复约束
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#68-getcompactusersummarymessage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.8 getCompactUserSummaryMessage()：摘要注入消息
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#69-formatcompactsummaryscratchpad" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.9 formatCompactSummary()：Scratchpad 剥离机制
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#610" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.10 微压缩的工作原理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6.10 微压缩的工作原理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#time_based_mc_cleared_message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TIME_BASED_MC_CLEARED_MESSAGE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        时间触发型微压缩
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cached_microcompact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        缓存编辑型微压缩（CACHED_MICROCOMPACT）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#611" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.11 会话记忆压缩：第三层架构
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#612-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.12 压缩 Prompt 设计总结
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-design-principles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    第七章 Prompt 设计的十条核心原则
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    附录
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    附录
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix-a-english/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    附录 A：英文原版 Prompt 完整收录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../appendix-b-chinese/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    附录 B：中文译文完整收录
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="本页目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      本页目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#61" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 三层压缩架构概览
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#62-no_tools_preamble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 NO_TOOLS_PREAMBLE：关键约束的双重封锁
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#63-detailed_analysis_instruction_base" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 DETAILED_ANALYSIS_INSTRUCTION_BASE：引导式分析模板
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#64-base_compact_prompt-9-section" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 BASE_COMPACT_PROMPT：全量压缩的 9 个 Section
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#65-partial_compact_prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.5 PARTIAL_COMPACT_PROMPT：局部压缩变体
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#66-partial_compact_up_to_prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.6 PARTIAL_COMPACT_UP_TO_PROMPT：反向压缩变体
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#67-no_tools_trailer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.7 NO_TOOLS_TRAILER：尾部重复约束
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#68-getcompactusersummarymessage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.8 getCompactUserSummaryMessage()：摘要注入消息
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#69-formatcompactsummaryscratchpad" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.9 formatCompactSummary()：Scratchpad 剥离机制
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#610" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.10 微压缩的工作原理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6.10 微压缩的工作原理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#time_based_mc_cleared_message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TIME_BASED_MC_CLEARED_MESSAGE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        时间触发型微压缩
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cached_microcompact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        缓存编辑型微压缩（CACHED_MICROCOMPACT）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#611" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.11 会话记忆压缩：第三层架构
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#612-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.12 压缩 Prompt 设计总结
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="prompt">第六章：压缩摘要 Prompt 全解析<a class="headerlink" href="#prompt" title="Permanent link">&para;</a></h1>
+<p>每次与 Claude 的对话都受限于上下文窗口。当 Claude Code 的对话历史积累到窗口限制附近时，系统会启动"压缩"机制——把旧的对话历史摘要成一段结构化文字，替换掉原始消息，从而为新的工作释放空间。</p>
+<p>这个机制涉及三类 prompt，分别对应三种不同的场景和设计目标。本章按从简单到复杂的顺序，完整分析这套压缩 prompt 体系的每一处设计决策。</p>
+<blockquote>
+<p><strong>本书贯穿的设计模式</strong></p>
+<p>以下设计模式在本章中反复出现。每次出现的<strong>最典型处</strong>会用 <code>→ 原则N</code> 标注，完整归纳见第七章。</p>
+<p><code>① 失败驱动</code> <code>② 双边约束</code> <code>③ 具体可操作</code> <code>④ 理由优于规则</code>
+<code>⑤ 决策框架</code> <code>⑥ 禁止+替代</code> <code>⑦ 认知框架</code> <code>⑧ 权限不可传递</code>
+<code>⑨ 格式即行为</code> <code>⑩ 随版本演化</code></p>
+</blockquote>
+<hr />
+<h2 id="61">6.1 三层压缩架构概览<a class="headerlink" href="#61" title="Permanent link">&para;</a></h2>
+<p>Claude Code 有三种不同的压缩路径，各自有不同的代价和适用场景：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>对话历史积累
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>      │
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>      ▼
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>┌─────────────────────────────────────────────────────────┐
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│ 第一层：微压缩（MicroCompact）                              │
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│ 目标：清理旧的工具调用结果（tool results）                     │
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│ 代价：零 API 调用（内容替换，不摘要）                          │
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│ 触发：① 时间触发（距上次响应超过 N 分钟）                      │
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│        ② 缓存编辑触发（CACHED_MICROCOMPACT，通过 API 层删除）  │
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>└─────────────────────────────────────────────────────────┘
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>      │ 若微压缩不足以控制窗口使用率
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>      ▼
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>┌─────────────────────────────────────────────────────────┐
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>│ 第二层：全量压缩（Full Compact / Autocompact）              │
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>│ 目标：摘要整个（或部分）对话历史                               │
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>│ 代价：一次额外的 API 调用（用于生成摘要）                      │
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>│ 触发：对话 token 数超过自动压缩阈值，或用户手动 /compact        │
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>└─────────────────────────────────────────────────────────┘
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>      │ 若启用了会话记忆功能
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>      ▼
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>┌─────────────────────────────────────────────────────────┐
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>│ 第三层：会话记忆压缩（Session Memory Compact）              │
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>│ 目标：用持久化的会话记忆替代实时 LLM 摘要                     │
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>│ 代价：几乎零（读取已生成的文件，不重新生成摘要）                 │
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>│ 触发：会话记忆文件存在且非空，且 SM Compact 功能已启用          │
+</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>└─────────────────────────────────────────────────────────┘
+</span></code></pre></div>
+<p>本章的核心是第二层——全量压缩的 prompt 设计。第一层（微压缩）的机制在后半部分分析，第三层（会话记忆压缩）作为架构补充在最后简要描述。</p>
+<hr />
+<h2 id="62-no_tools_preamble">6.2 <code>NO_TOOLS_PREAMBLE</code>：关键约束的双重封锁<a class="headerlink" href="#62-no_tools_preamble" title="Permanent link">&para;</a></h2>
+<p><strong>英文原文</strong>（来源：<code>src/services/compact/prompt.ts</code>，第 19–26 行）</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>CRITICAL: Respond with TEXT ONLY. Do NOT call any tools.
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>- Do NOT use Read, Bash, Grep, Glob, Edit, Write, or ANY other tool.
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>- You already have all the context you need in the conversation above.
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>- Tool calls will be REJECTED and will waste your only turn — you will fail the task.
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>- Your entire response must be plain text: an &lt;analysis&gt; block followed by a &lt;summary&gt; block.
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：</p>
+<p><strong>严重警告</strong>：仅用<strong>纯文字</strong>回应。<strong>不要</strong>调用任何工具。</p>
+<ul>
+<li>不要使用 Read、Bash、Grep、Glob、Edit、Write 或<strong>任何</strong>其他工具。</li>
+<li>上面的对话中你已经拥有所需的全部上下文。</li>
+<li>工具调用将被<strong>拒绝</strong>，并将浪费你唯一的轮次——你将无法完成任务。</li>
+<li>你的整个回应必须是纯文字：一个 <code>&lt;analysis&gt;</code> 块，然后是一个 <code>&lt;summary&gt;</code> 块。</li>
+</ul>
+</blockquote>
+<p><strong>设计解析</strong></p>
+<p><code>NO_TOOLS_PREAMBLE</code> 是整个压缩系统中最具工程性的一段 prompt。它被放在所有压缩 prompt 的<strong>最前面</strong>，而不是最后面，这个位置选择背后有精确的技术原因。</p>
+<p>源代码注释解释了全部背景：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// Aggressive no-tools preamble. The cache-sharing fork path inherits the</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1">// parent&#39;s full tool set (required for cache-key match), and on Sonnet 4.6+</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1">// adaptive-thinking models the model sometimes attempts a tool call despite</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1">// the weaker trailer instruction. With maxTurns: 1, a denied tool call means</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1">// no text output → falls through to the streaming fallback (2.79% on 4.6 vs</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="c1">// 0.01% on 4.5). Putting this FIRST and making it explicit about rejection</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1">// consequences prevents the wasted turn.</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文解读</strong>：cache-sharing fork 路径继承了父 Agent 的完整工具集（缓存键匹配需要）。在 Sonnet 4.6+ 的自适应思考模型上，模型有时会尝试工具调用，尽管尾部的弱约束存在。由于 <code>maxTurns: 1</code>，被拒绝的工具调用意味着没有文字输出 → 退回到流式降级（4.6 上发生率 2.79% vs 4.5 上的 0.01%）。把此内容放在<strong>最前面</strong>，并明确说明拒绝后果，可以防止轮次浪费。</p>
+</blockquote>
+<p>这段注释揭示了三个设计决策的相互依赖：</p>
+<p><strong>第一，压缩 prompt 的上下文里有完整的工具集。</strong> 压缩 prompt 通过 cache-sharing fork 路径执行（共享父 Agent 的缓存前缀，以节省 cache_creation token），这意味着模型在执行压缩时，仍然"看到"完整的工具列表。单纯告诉模型"不要用工具"是不够的——模型知道工具在那里，面对复杂的摘要任务时，自然倾向于"先读几个文件来确认细节"。</p>
+<p><strong>第二，maxTurns: 1 使工具调用的代价变成了任务失败。</strong> 压缩操作只允许一轮响应。如果模型在这一轮里调用了工具（被系统拒绝），那这一轮就结束了，没有文字输出，压缩失败。2.79% 的失败率是真实测量数据——这不是假设的风险。</p>
+<p><strong>第三，PREAMBLE 放在最前面是预防，TRAILER 放在最后面是强化。</strong> 两者共同形成"双重封锁"：模型在开始读 prompt 时就接收到最强约束（CRITICAL + 工具名枚举），在读完全部内容后再次收到提醒（REMINDER）。对于一个思维链可能在中途改变决策的模型，首尾两处约束比单一约束更可靠。</p>
+<p><strong>"Tool calls will be REJECTED and will waste your only turn — you will fail the task."</strong> 这句话的设计很精妙：它不只是说"不要用工具"，而是让模型理解后果的完整因果链（被拒绝 → 浪费轮次 → 任务失败）。让模型理解"为什么不能"比单纯命令"不要做"更有效，因为模型可以用这个理由在自己的推理中抑制工具调用冲动。</p>
+<p><code>→ 原则①：失败驱动</code> — 2.79%（4.6）vs 0.01%（4.5）是实测数据，PREAMBLE 的首位置设计和 TRAILER 强化都来自对这个失败率的测量，见第七章 1.1 节。</p>
+<p><code>→ 原则⑩：随版本演化</code> — 注释里明确了版本差异（4.6+ adaptive-thinking 行为不同于 4.5），prompt 设计随模型版本更新而调整，见第七章 10.1 节。</p>
+<hr />
+<h2 id="63-detailed_analysis_instruction_base">6.3 <code>DETAILED_ANALYSIS_INSTRUCTION_BASE</code>：引导式分析模板<a class="headerlink" href="#63-detailed_analysis_instruction_base" title="Permanent link">&para;</a></h2>
+<p><strong>英文原文（BASE 版本）</strong>（来源：<code>src/services/compact/prompt.ts</code>，第 31–44 行）</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Before providing your final summary, wrap your analysis in &lt;analysis&gt; tags to organize your thoughts and ensure you&#39;ve covered all necessary points. In your analysis process:
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>1. Chronologically analyze each message and section of the conversation. For each section thoroughly identify:
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>   - The user&#39;s explicit requests and intents
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>   - Your approach to addressing the user&#39;s requests
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>   - Key decisions, technical concepts and code patterns
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>   - Specific details like:
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>     - file names
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>     - full code snippets
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>     - function signatures
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>     - file edits
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>   - Errors that you ran into and how you fixed them
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>   - Pay special attention to specific user feedback that you received, especially if the user told you to do something differently.
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>2. Double-check for technical accuracy and completeness, addressing each required element thoroughly.
+</span></code></pre></div>
+<p><strong>英文原文（PARTIAL 版本）</strong>（来源：<code>src/services/compact/prompt.ts</code>，第 46–59 行）</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>Before providing your final summary, wrap your analysis in &lt;analysis&gt; tags to organize your thoughts and ensure you&#39;ve covered all necessary points. In your analysis process:
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>1. Analyze the recent messages chronologically. For each section thoroughly identify:
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>   - The user&#39;s explicit requests and intents
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>   - Your approach to addressing the user&#39;s requests
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>   - Key decisions, technical concepts and code patterns
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>   - Specific details like:
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>     - file names
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>     - full code snippets
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>     - function signatures
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>     - file edits
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>   - Errors that you ran into and how you fixed them
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>   - Pay special attention to specific user feedback that you received, especially if the user told you to do something differently.
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>2. Double-check for technical accuracy and completeness, addressing each required element thoroughly.
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：</p>
+<p>在提供最终摘要之前，将你的分析包裹在 <code>&lt;analysis&gt;</code> 标签中，以整理思路并确保覆盖了所有必要的要点。在分析过程中：</p>
+<ol>
+<li>按时间顺序分析对话的每条消息和每个部分。对每个部分彻底识别：</li>
+<li>用户的明确请求和意图</li>
+<li>你处理用户请求的方法</li>
+<li>关键决策、技术概念和代码模式</li>
+<li>具体细节，如：文件名、完整代码片段、函数签名、文件编辑</li>
+<li>你遇到的错误以及如何修复它们</li>
+<li><strong>特别关注</strong>你收到的具体用户反馈，尤其是如果用户告诉你要用不同的方式做某事</li>
+<li>仔细检查技术准确性和完整性，彻底处理每个必要元素。</li>
+</ol>
+</blockquote>
+<p><strong>设计解析</strong></p>
+<p><strong><code>&lt;analysis&gt;</code> 标签是草稿便签，不是输出内容。</strong> 源代码注释说：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1">// Two variants: BASE scopes to &quot;the conversation&quot;, PARTIAL scopes to &quot;the</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="c1">// recent messages&quot;. The &lt;analysis&gt; block is a drafting scratchpad that</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1">// formatCompactSummary() strips before the summary reaches context.</span>
+</span></code></pre></div>
+<p>模型被要求在 <code>&lt;analysis&gt;</code> 里自由思考，但这个思考过程最终会被 <code>formatCompactSummary()</code> 函数删除——它永远不会出现在注入回对话的摘要里。这是"Chain-of-Thought（思维链）剥离"的实际工程实现：利用 CoT 提升输出质量，但不让中间思维过程占用宝贵的上下文空间。</p>
+<p><code>→ 原则⑨：格式即行为</code> — <code>&lt;analysis&gt;</code> 块规定了模型的"打草稿"行为，<code>&lt;summary&gt;</code> 块规定了输出内容，两个标签名本身就是行为指令，见第七章 9.1 节。</p>
+<p><strong>"按时间顺序分析"的约束</strong> 防止了一个常见的摘要失败：自由摘要时，模型倾向于按重要性排列（把最重要的事放前面），而不是按时间顺序。但对于需要续接工作的摘要，时间顺序比重要性顺序更关键——"最近做了什么"比"最重要的是什么"更有续接价值。</p>
+<p><strong>"完整的代码片段"而非"代码描述"</strong> 是这段 prompt 里最有工程价值的细节：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>- Specific details like:
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>  - file names
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>  - full code snippets
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>  - function signatures
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>  - file edits
+</span></code></pre></div>
+<p>"full code snippets"——注意是"完整代码片段"，不是"代码描述"或"代码摘要"。摘要里如果写"修改了认证逻辑"，续接时模型不知道具体改了什么；但如果有"把 <code>if (token)</code> 改为 <code>if (token &amp;&amp; !token.expired)</code>"，模型可以直接基于这个上下文继续工作，不需要重新读文件。</p>
+<p><strong>"Pay special attention to specific user feedback"</strong> 是防止"意图漂移"的关键规则。在长对话中，用户可能多次修正模型的方向（"不对，我说的是..."，"不要用那种方式，改用..."）。如果摘要只记录了结果而不记录用户的反馈，续接后的模型可能重蹈覆辙，又走回被纠正过的旧路。</p>
+<p><strong>BASE vs PARTIAL 的唯一区别</strong> 是范围描述：</p>
+<ul>
+<li>BASE：<code>"Chronologically analyze each message and section of the conversation"</code> — 整个对话</li>
+<li>PARTIAL：<code>"Analyze the recent messages chronologically"</code> — 仅最近的消息</li>
+</ul>
+<p>这个差异对应两种不同的压缩模式（见下节分析）。</p>
+<hr />
+<h2 id="64-base_compact_prompt-9-section">6.4 <code>BASE_COMPACT_PROMPT</code>：全量压缩的 9 个 Section<a class="headerlink" href="#64-base_compact_prompt-9-section" title="Permanent link">&para;</a></h2>
+<p><strong>英文原文</strong>（来源：<code>src/services/compact/prompt.ts</code>，第 61–143 行）</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Your task is to create a detailed summary of the conversation so far, paying close attention to the user&#39;s explicit requests and your previous actions.
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>This summary should be thorough in capturing technical details, code patterns, and architectural decisions that would be essential for continuing development work without losing context.
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>[DETAILED_ANALYSIS_INSTRUCTION_BASE]
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>Your summary should include the following sections:
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>1. Primary Request and Intent: Capture all of the user&#39;s explicit requests and intents in detail
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>2. Key Technical Concepts: List all important technical concepts, technologies, and frameworks discussed.
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>3. Files and Code Sections: Enumerate specific files and code sections examined, modified, or created. Pay special attention to the most recent messages and include full code snippets where applicable and include a summary of why this file read or edit is important.
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>4. Errors and fixes: List all errors that you ran into, and how you fixed them. Pay special attention to specific user feedback that you received, especially if the user told you to do something differently.
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>5. Problem Solving: Document problems solved and any ongoing troubleshooting efforts.
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>6. All user messages: List ALL user messages that are not tool results. These are critical for understanding the users&#39; feedback and changing intent.
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>7. Pending Tasks: Outline any pending tasks that you have explicitly been asked to work on.
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>8. Current Work: Describe in detail precisely what was being worked on immediately before this summary request, paying special attention to the most recent messages from both user and assistant. Include file names and code snippets where applicable.
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>9. Optional Next Step: List the next step that you will take that is related to the most recent work you were doing. IMPORTANT: ensure that this step is DIRECTLY in line with the user&#39;s most recent explicit requests, and the task you were working on immediately before this summary request. If your last task was concluded, then only list next steps if they are explicitly in line with the users request. Do not start on tangential requests or really old requests that were already completed without confirming with the user first.
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>                       If there is a next step, include direct quotes from the most recent conversation showing exactly what task you were working on and where you left off. This should be verbatim to ensure there&#39;s no drift in task interpretation.
+</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>
+</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>[示例输出结构]
+</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>
+</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a>Please provide your summary based on the conversation so far, following this structure and ensuring precision and thoroughness in your response. 
+</span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>
+</span><span id="__span-7-23"><a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a>There may be additional summarization instructions provided in the included context. If so, remember to follow these instructions when creating the above summary. Examples of instructions include:
+</span><span id="__span-7-24"><a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a>&lt;example&gt;
+</span><span id="__span-7-25"><a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a>## Compact Instructions
+</span><span id="__span-7-26"><a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a>When summarizing the conversation focus on typescript code changes and also remember the mistakes you made and how you fixed them.
+</span><span id="__span-7-27"><a id="__codelineno-7-27" name="__codelineno-7-27" href="#__codelineno-7-27"></a>&lt;/example&gt;
+</span><span id="__span-7-28"><a id="__codelineno-7-28" name="__codelineno-7-28" href="#__codelineno-7-28"></a>
+</span><span id="__span-7-29"><a id="__codelineno-7-29" name="__codelineno-7-29" href="#__codelineno-7-29"></a>&lt;example&gt;
+</span><span id="__span-7-30"><a id="__codelineno-7-30" name="__codelineno-7-30" href="#__codelineno-7-30"></a># Summary instructions
+</span><span id="__span-7-31"><a id="__codelineno-7-31" name="__codelineno-7-31" href="#__codelineno-7-31"></a>When you are using compact - please focus on test output and code changes. Include file reads verbatim.
+</span><span id="__span-7-32"><a id="__codelineno-7-32" name="__codelineno-7-32" href="#__codelineno-7-32"></a>&lt;/example&gt;
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：</p>
+<p>你的任务是创建迄今为止对话的详细摘要，密切关注用户的明确请求和你之前的行动。此摘要在捕捉技术细节、代码模式和架构决策方面应该是全面的，这些对于在不丢失上下文的情况下继续开发工作至关重要。</p>
+<p>你的摘要应包括以下部分：</p>
+<ol>
+<li><strong>主要请求和意图</strong>：详细捕捉用户所有明确的请求和意图</li>
+<li><strong>关键技术概念</strong>：列出所有重要的技术概念、技术和框架</li>
+<li><strong>文件和代码段</strong>：列举被检查、修改或创建的特定文件和代码段。特别关注最近的消息并在适用时包含完整代码片段，并包含说明为什么此文件读取或编辑重要的摘要。</li>
+<li><strong>错误和修复</strong>：列出你遇到的所有错误，以及如何修复它们。特别关注你收到的具体用户反馈，尤其是如果用户告诉你要用不同的方式做某事。</li>
+<li><strong>问题解决</strong>：记录已解决的问题和任何正在进行的故障排除工作。</li>
+<li><strong>所有用户消息</strong>：列出所有不是工具结果的用户消息。这些对于理解用户的反馈和变化的意图至关重要。</li>
+<li><strong>待处理任务</strong>：概述你被明确要求处理的任何待处理任务。</li>
+<li><strong>当前工作</strong>：详细描述在此摘要请求之前正在进行的工作，特别关注用户和助手的最新消息。在适用时包含文件名和代码片段。</li>
+<li><strong>可选的下一步</strong>：列出与你最近工作相关的下一步。重要：确保此步骤与用户最近的明确请求和你在此摘要请求之前正在处理的任务<strong>直接</strong>一致。如果下一步存在，包含来自最近对话的<strong>直接引用</strong>，准确显示你正在处理的任务和你停下来的地方。这应该是逐字引用，以确保任务解释没有漂移。</li>
+</ol>
+</blockquote>
+<p><strong>设计解析</strong></p>
+<p>9 个 Section 的设计不是随机排列——它们构成了一个从<strong>背景 → 状态 → 续接</strong>的信息漏斗。</p>
+<p><strong>Section 1-5：背景信息层</strong></p>
+<p>这五个 Section 提供了对话的全局背景：用户的请求是什么、涉及什么技术、文件如何变化、遇到了什么问题。这是续接工作的基础知识层。</p>
+<p><strong>Section 6（All user messages）</strong> 是整个 9 个 Section 里最特殊的一个：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>6. All user messages: List ALL user messages that are not tool results. These are critical
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>for understanding the users&#39; feedback and changing intent.
+</span></code></pre></div>
+<p>"<strong>LIST ALL</strong>"——不是摘要，不是重要的，而是<strong>全部</strong>。这个要求看起来与"摘要"的目标相矛盾（摘要的目的不是压缩吗？）。背后的逻辑是：用户消息是整个对话中<strong>信息密度最高的部分</strong>——每条用户消息都代表了一次明确的意图声明、方向修正或反馈。摘要这些消息会引入解释性偏差（摘要者的理解可能与实际意图不符）。完整保留用户消息，续接时的模型可以原汁原味地理解用户的历史意图，而不是通过摘要者的中间层。</p>
+<p><strong>Section 8（Current Work）和 Section 9（Optional Next Step）</strong> 是续接的核心：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>9. Optional Next Step: ... If there is a next step, include direct quotes from the most recent
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>conversation showing exactly what task you were working on and where you left off. This should
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>be verbatim to ensure there&#39;s no drift in task interpretation.
+</span></code></pre></div>
+<p>"<strong>verbatim</strong>"（逐字）——这是全文中唯一要求用原话引用而非转述的地方。为什么？因为摘要中的任何转述都可能引入"任务漂移"（task drift）——续接后的模型基于转述的任务理解开始工作，而不是基于用户说的原话。随着压缩次数增加，每次转述都会累积一层偏差，最终模型做的事情与用户最初想要的相去甚远。verbatim 引用是防止这种语义漂移的最可靠方法。</p>
+<p><strong>"Optional Next Step"而非"Next Step"</strong> 是另一个精细设计：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>If your last task was concluded, then only list next steps if they are explicitly in line
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>with the users request. Do not start on tangential requests or really old requests that were
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>already completed without confirming with the user first.
+</span></code></pre></div>
+<p>摘要不应该凭空为续接模型生成议程。如果对话中的任务已经完成，续接模型应该等待用户的新指令，而不是从摘要里找"还没做的旧请求"来执行。这条规则防止了一种自动化陷阱：模型在压缩后自行恢复执行用户早就改变主意的旧任务。</p>
+<p><strong>自定义压缩指令的支持</strong>：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>There may be additional summarization instructions provided in the included context.
+</span></code></pre></div>
+<p>用户可以在 CLAUDE.md 里写 <code>## Compact Instructions</code>，Claude Code 会在压缩时把这些指令追加到 prompt 里。这是一种元定制：用户可以改变压缩摘要的重点（"关注 TypeScript 代码变更"、"包含 verbatim 的文件读取内容"）。这个设计的实现方式是 <code>getCompactPrompt(customInstructions?)</code> 函数签名——自定义指令作为可选参数追加在基础 prompt 之后，不影响基础结构。</p>
+<hr />
+<h2 id="65-partial_compact_prompt">6.5 <code>PARTIAL_COMPACT_PROMPT</code>：局部压缩变体<a class="headerlink" href="#65-partial_compact_prompt" title="Permanent link">&para;</a></h2>
+<p><strong>英文原文（关键差异）</strong>（来源：<code>src/services/compact/prompt.ts</code>，第 145–203 行，节选）</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>Your task is to create a detailed summary of the RECENT portion of the conversation — the messages that follow earlier retained context. The earlier messages are being kept intact and do NOT need to be summarized. Focus your summary on what was discussed, learned, and accomplished in the recent messages only.
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>[...]
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>Please provide your summary based on the RECENT messages only (after the retained earlier context), following this structure and ensuring precision and thoroughness in your response.
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：</p>
+<p>你的任务是创建对话<strong>最近部分</strong>的详细摘要——跟在之前保留的上下文之后的消息。之前的消息保持完整，<strong>不需要</strong>摘要。只关注最近消息中讨论、学习和完成的内容。</p>
+<p>请仅基于<strong>最近的消息</strong>（在保留的早期上下文之后）提供你的摘要。</p>
+</blockquote>
+<p><strong>设计解析</strong></p>
+<p>局部压缩（<code>PARTIAL_COMPACT_PROMPT</code>，对应 <code>direction: 'from'</code>）解决了这样一个场景：对话历史很长，但已经有了一个"压缩边界"——边界之前的内容已经被摘要过，边界之后的新内容需要被摘要并合并。</p>
+<p>这种场景下，全量压缩 BASE 的问题是：它会把已经摘要过的旧摘要再次摘要，层层套叠，逐渐失真。PARTIAL 的设计是"只摘要新部分"，保留旧部分的摘要不动，然后把两者拼接起来。</p>
+<p>PARTIAL 与 BASE 的结构差异非常小（只有范围描述不同），但这个微小的措辞差异（"recent messages only" vs "the conversation so far"）对模型的摘要行为有显著影响——模型会遵从这个范围约束，不去重新处理它被告知"已保留完整"的早期内容。</p>
+<hr />
+<h2 id="66-partial_compact_up_to_prompt">6.6 <code>PARTIAL_COMPACT_UP_TO_PROMPT</code>：反向压缩变体<a class="headerlink" href="#66-partial_compact_up_to_prompt" title="Permanent link">&para;</a></h2>
+<p><strong>英文原文</strong>（来源：<code>src/services/compact/prompt.ts</code>，第 208–267 行）</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>Your task is to create a detailed summary of this conversation. This summary will be placed at the start of a continuing session; newer messages that build on this context will follow after your summary (you do not see them here). Summarize thoroughly so that someone reading only your summary and then the newer messages can fully understand what happened and continue the work.
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>[DETAILED_ANALYSIS_INSTRUCTION_BASE]
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>Your summary should include the following sections:
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>1. Primary Request and Intent: Capture the user&#39;s explicit requests and intents in detail
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>2. Key Technical Concepts: List important technical concepts, technologies, and frameworks discussed.
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>3. Files and Code Sections: Enumerate specific files and code sections examined, modified, or created. Include full code snippets where applicable and include a summary of why this file read or edit is important.
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>4. Errors and fixes: List errors encountered and how they were fixed.
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>5. Problem Solving: Document problems solved and any ongoing troubleshooting efforts.
+</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>6. All user messages: List ALL user messages that are not tool results.
+</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a>7. Pending Tasks: Outline any pending tasks.
+</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a>8. Work Completed: Describe what was accomplished by the end of this portion.
+</span><span id="__span-13-15"><a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a>9. Context for Continuing Work: Summarize any context, decisions, or state that would be needed to understand and continue the work in subsequent messages.
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：</p>
+<p>你的任务是创建对话的详细摘要。此摘要将被放置在继续会话的<strong>开头</strong>；在此上下文之后，建立在此基础上的<strong>更新的消息</strong>将随之而来（你在这里看不到它们）。彻底摘要，以便只阅读你的摘要然后阅读更新消息的人能够完全理解发生了什么，并继续工作。</p>
+<p>第 9 节（最大不同）：<strong>继续工作的上下文</strong>：总结理解和继续后续消息中的工作所需的任何上下文、决策或状态。</p>
+</blockquote>
+<p><strong>设计解析</strong></p>
+<p><code>PARTIAL_COMPACT_UP_TO_PROMPT</code>（<code>direction: 'up_to'</code>）是三个变体中最特殊的，因为它的信息流方向与另外两个相反。</p>
+<p>理解它需要先理解"up_to"压缩的使用场景。代码注释说：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1">// &#39;up_to&#39;: model sees only the summarized prefix (cache hit). Summary will</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="c1">// precede kept recent messages, hence &quot;Context for Continuing Work&quot; section.</span>
+</span></code></pre></div>
+<p>在缓存命中时，模型只"看到"被摘要的前段对话（通过缓存读取），不需要重新处理这部分内容。"up_to"压缩就是对这个前段进行摘要。摘要完成后，它会被放在对话的开头，后面跟着<strong>模型尚未处理的新消息</strong>。</p>
+<p>这就解释了为什么"up_to"变体的第 9 Section 从"Optional Next Step"变成了"Context for Continuing Work"：</p>
+<p><strong>BASE / PARTIAL（from）的 Section 9</strong>：
+<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>9. Optional Next Step: List the next step that you will take...
+</span></code></pre></div>
+这里的"next step"是压缩后<strong>续接模型要执行</strong>的操作——摘要是为了让续接模型直接开始工作。</p>
+<p><strong>PARTIAL（up_to）的 Section 9</strong>：
+<div class="language-text highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>9. Context for Continuing Work: Summarize any context, decisions, or state that would be
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>needed to understand and continue the work in subsequent messages.
+</span></code></pre></div>
+这里没有"下一步"，因为"up_to"摘要后面跟着的是<strong>已知的新消息</strong>——续接模型会从这些新消息里直接知道下一步是什么。所以 Section 9 变成了"状态交接"而非"任务指令"：提供理解后续消息所需的上下文背景。</p>
+<p>另一个差异：<strong>Section 8 从 "Current Work" 变成了 "Work Completed"</strong>。BASE/PARTIAL 的"Current Work"描述的是中断时刻"正在做什么"；"up_to"的"Work Completed"描述的是这个前段"完成了什么"——因为从后续消息的角度看，这个前段的所有工作都已经完成了。</p>
+<hr />
+<h2 id="67-no_tools_trailer">6.7 <code>NO_TOOLS_TRAILER</code>：尾部重复约束<a class="headerlink" href="#67-no_tools_trailer" title="Permanent link">&para;</a></h2>
+<p><strong>英文原文</strong>（来源：<code>src/services/compact/prompt.ts</code>，第 269–272 行）</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>REMINDER: Do NOT call any tools. Respond with plain text only — an &lt;analysis&gt; block followed by a &lt;summary&gt; block. Tool calls will be rejected and you will fail the task.
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：</p>
+<p><strong>提醒</strong>：<strong>不要</strong>调用任何工具。仅用纯文字回应——一个 <code>&lt;analysis&gt;</code> 块，然后是一个 <code>&lt;summary&gt;</code> 块。工具调用将被拒绝，你将无法完成任务。</p>
+</blockquote>
+<p><strong>设计解析</strong></p>
+<p>TRAILER 是 PREAMBLE 的回响。完整的压缩 prompt 结构是：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>NO_TOOLS_PREAMBLE（最前）
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>     ↓
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>BASE/PARTIAL/UP_TO_COMPACT_PROMPT（主体）
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>     ↓
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>[可选：自定义指令]
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>     ↓
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>NO_TOOLS_TRAILER（最后）
+</span></code></pre></div>
+<p>两处约束的表述有细微差异：</p>
+<p><strong>PREAMBLE 用"CRITICAL"（严重警告）</strong> + 详细列举工具名 + 解释全部后果：
+<div class="language-text highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>CRITICAL: Respond with TEXT ONLY. Do NOT call any tools.
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>- Do NOT use Read, Bash, Grep, Glob, Edit, Write, or ANY other tool.
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>- Tool calls will be REJECTED and will waste your only turn — you will fail the task.
+</span></code></pre></div></p>
+<p><strong>TRAILER 用"REMINDER"（提醒）</strong> + 仅重申核心约束：
+<div class="language-text highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>REMINDER: Do NOT call any tools. Respond with plain text only...
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>Tool calls will be rejected and you will fail the task.
+</span></code></pre></div></p>
+<p>这种"强调前置，简洁收尾"的设计是合理的：
+- PREAMBLE 需要强力，因为它在模型读取任何内容之前就设定了最重要的约束
+- TRAILER 需要轻量，因为模型已经读完了主体内容，这里只是防止在生成响应时"忘记"约束，而不是重新建立约束</p>
+<p>两者的共同点是：都明确了后果（"will fail the task"），不只是命令，也给出了理由。</p>
+<hr />
+<h2 id="68-getcompactusersummarymessage">6.8 <code>getCompactUserSummaryMessage()</code>：摘要注入消息<a class="headerlink" href="#68-getcompactusersummarymessage" title="Permanent link">&para;</a></h2>
+<p>这个函数决定了压缩摘要如何被"重新注入"到对话上下文中。它不是压缩 prompt 的一部分，而是生成压缩后注入给模型的"你之前的对话被摘要了，以下是摘要"消息。</p>
+<p><strong>英文原文（核心模式）</strong>（来源：<code>src/services/compact/prompt.ts</code>，第 345–373 行）</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="kd">let</span><span class="w"> </span><span class="nx">baseSummary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="si">${</span><span class="nx">formattedSummary</span><span class="si">}</span><span class="sb">`</span>
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">transcriptPath</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="w">  </span><span class="nx">baseSummary</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="sb">`\n\nIf you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: </span><span class="si">${</span><span class="nx">transcriptPath</span><span class="si">}</span><span class="sb">`</span>
+</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="p">}</span>
+</span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a>
+</span><span id="__span-21-9"><a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">recentMessagesPreserved</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-21-10"><a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a><span class="w">  </span><span class="nx">baseSummary</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="sb">`\n\nRecent messages are preserved verbatim.`</span>
+</span><span id="__span-21-11"><a id="__codelineno-21-11" name="__codelineno-21-11" href="#__codelineno-21-11"></a><span class="p">}</span>
+</span><span id="__span-21-12"><a id="__codelineno-21-12" name="__codelineno-21-12" href="#__codelineno-21-12"></a>
+</span><span id="__span-21-13"><a id="__codelineno-21-13" name="__codelineno-21-13" href="#__codelineno-21-13"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">suppressFollowUpQuestions</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-21-14"><a id="__codelineno-21-14" name="__codelineno-21-14" href="#__codelineno-21-14"></a><span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="nx">continuation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`</span><span class="si">${</span><span class="nx">baseSummary</span><span class="si">}</span>
+</span><span id="__span-21-15"><a id="__codelineno-21-15" name="__codelineno-21-15" href="#__codelineno-21-15"></a><span class="sb">Continue the conversation from where it left off without asking the user any further questions. Resume directly — do not acknowledge the summary, do not recap what was happening, do not preface with &quot;I&#39;ll continue&quot; or similar. Pick up the last task as if the break never happened.`</span>
+</span><span id="__span-21-16"><a id="__codelineno-21-16" name="__codelineno-21-16" href="#__codelineno-21-16"></a>
+</span><span id="__span-21-17"><a id="__codelineno-21-17" name="__codelineno-21-17" href="#__codelineno-21-17"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="nx">feature</span><span class="p">(</span><span class="s1">&#39;PROACTIVE&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">feature</span><span class="p">(</span><span class="s1">&#39;KAIROS&#39;</span><span class="p">))</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">proactiveModule</span><span class="o">?</span><span class="p">.</span><span class="nx">isProactiveActive</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-21-18"><a id="__codelineno-21-18" name="__codelineno-21-18" href="#__codelineno-21-18"></a><span class="w">    </span><span class="nx">continuation</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="sb">`</span>
+</span><span id="__span-21-19"><a id="__codelineno-21-19" name="__codelineno-21-19" href="#__codelineno-21-19"></a>
+</span><span id="__span-21-20"><a id="__codelineno-21-20" name="__codelineno-21-20" href="#__codelineno-21-20"></a><span class="sb">You are running in autonomous/proactive mode. This is NOT a first wake-up — you were already working autonomously before compaction. Continue your work loop: pick up where you left off based on the summary above. Do not greet the user or ask what to work on.`</span>
+</span><span id="__span-21-21"><a id="__codelineno-21-21" name="__codelineno-21-21" href="#__codelineno-21-21"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-21-22"><a id="__codelineno-21-22" name="__codelineno-21-22" href="#__codelineno-21-22"></a>
+</span><span id="__span-21-23"><a id="__codelineno-21-23" name="__codelineno-21-23" href="#__codelineno-21-23"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">continuation</span>
+</span><span id="__span-21-24"><a id="__codelineno-21-24" name="__codelineno-21-24" href="#__codelineno-21-24"></a><span class="p">}</span>
+</span></code></pre></div>
+<p><strong>展开后的三种模式：</strong></p>
+<p><strong>模式 A：基础摘要（<code>suppressFollowUpQuestions = false</code>）</strong></p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>This session is being continued from a previous conversation that ran out of context.
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>The summary below covers the earlier portion of the conversation.
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a>[摘要内容]
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>
+</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a>If you need specific details from before compaction (like exact code snippets, error messages,
+</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a>or content you generated), read the full transcript at: [路径]
+</span></code></pre></div>
+<p><strong>模式 B：自动续接（<code>suppressFollowUpQuestions = true</code>）</strong></p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>This session is being continued from a previous conversation that ran out of context.
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>The summary below covers the earlier portion of the conversation.
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a>[摘要内容]
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a>If you need specific details from before compaction...
+</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a>
+</span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a>Recent messages are preserved verbatim.
+</span><span id="__span-23-9"><a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a>
+</span><span id="__span-23-10"><a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a>Continue the conversation from where it left off without asking the user any further questions.
+</span><span id="__span-23-11"><a id="__codelineno-23-11" name="__codelineno-23-11" href="#__codelineno-23-11"></a>Resume directly — do not acknowledge the summary, do not recap what was happening, do not
+</span><span id="__span-23-12"><a id="__codelineno-23-12" name="__codelineno-23-12" href="#__codelineno-23-12"></a>preface with &quot;I&#39;ll continue&quot; or similar. Pick up the last task as if the break never happened.
+</span></code></pre></div>
+<p><strong>模式 C：自主模式续接（自主模式且 <code>suppressFollowUpQuestions = true</code>）</strong></p>
+<p>模式 B 的内容，后面追加：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>You are running in autonomous/proactive mode. This is NOT a first wake-up — you were already
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>working autonomously before compaction. Continue your work loop: pick up where you left off
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>based on the summary above. Do not greet the user or ask what to work on.
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：</p>
+<p><strong>模式 A（基础）</strong>：本会话从之前因上下文耗尽而结束的对话继续。以下摘要涵盖了对话的早期部分。如果需要压缩前的具体细节，请读取完整记录于：[路径]</p>
+<p><strong>模式 B（自动续接）</strong>：在模式 A 基础上追加：不询问用户任何进一步问题，直接继续。不要确认摘要，不要重述正在发生的事情，不要以"我将继续"等开头。就像这个间断从未发生过一样接着最后的任务。</p>
+<p><strong>模式 C（自主模式续接）</strong>：在模式 B 基础上追加：你正在自主/主动模式下运行。这<strong>不是</strong>首次唤醒——在压缩之前你已经在自主工作。继续你的工作循环：根据上面的摘要从你停下的地方继续。不要问候用户或询问要做什么。</p>
+</blockquote>
+<p><strong>设计解析</strong></p>
+<p><strong>Transcript 路径的设计</strong> 解决了摘要不可避免的信息损失问题。任何摘要都会丢失一些细节，模型可能在续接时需要查阅具体的原始内容（如一段被修改的代码的完整版本）。提供 transcript 路径并告知模型可以通过 Read 工具访问，相当于给了模型一个"查阅原始记录"的逃生通道——当摘要里的信息不够用时，不必依赖幻觉，可以去查原始对话。</p>
+<p><strong>"Recent messages are preserved verbatim"</strong> 是局部压缩的信号。当近期消息被原样保留（不摘要）时，这条说明告诉模型：你下面看到的消息内容是完整的，不是被摘要过的。这防止了模型错误地把近期消息也视为"可能不完整的摘要"。</p>
+<p><strong>"Resume directly — do not acknowledge the summary"</strong> 是对一种模型自然行为的明确抑制：收到摘要后，模型倾向于先"承认"摘要（"好的，根据之前的摘要，我们在..."），这种承认是多余的——用户已经知道对话被压缩了，不需要模型再重述一遍。三个具体禁止（do not acknowledge / do not recap / do not preface）覆盖了承认行为的三种常见变体。</p>
+<p><strong>自主模式的特殊追加</strong> 是状态机设计的一个边界条件：自主模式下压缩后的模型可能误认为自己是"刚被唤醒的第一个 tick"，从而重新进入"问候用户+询问要做什么"的初始化流程（见第四章 <code>getProactiveSection()</code> 的分析）。"This is NOT a first wake-up"直接关闭了这个误判路径。</p>
+<hr />
+<h2 id="69-formatcompactsummaryscratchpad">6.9 <code>formatCompactSummary()</code>：Scratchpad 剥离机制<a class="headerlink" href="#69-formatcompactsummaryscratchpad" title="Permanent link">&para;</a></h2>
+<p><strong>英文原文（代码注释）</strong>（来源：<code>src/services/compact/prompt.ts</code>，第 305–335 行）</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="cm">/**</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="cm"> * Formats the compact summary by stripping the &lt;analysis&gt; drafting scratchpad</span>
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="cm"> * and replacing &lt;summary&gt; XML tags with readable section headers.</span>
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="cm"> * @param summary The raw summary string potentially containing &lt;analysis&gt; and &lt;summary&gt; XML tags</span>
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="cm"> * @returns The formatted summary with analysis stripped and summary tags replaced by headers</span>
+</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a><span class="cm"> */</span>
+</span><span id="__span-25-7"><a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">formatCompactSummary</span><span class="p">(</span><span class="nx">summary</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-25-8"><a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a><span class="w">  </span><span class="kd">let</span><span class="w"> </span><span class="nx">formattedSummary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">summary</span>
+</span><span id="__span-25-9"><a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a>
+</span><span id="__span-25-10"><a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a><span class="w">  </span><span class="c1">// Strip analysis section — it&#39;s a drafting scratchpad that improves summary</span>
+</span><span id="__span-25-11"><a id="__codelineno-25-11" name="__codelineno-25-11" href="#__codelineno-25-11"></a><span class="w">  </span><span class="c1">// quality but has no informational value once the summary is written.</span>
+</span><span id="__span-25-12"><a id="__codelineno-25-12" name="__codelineno-25-12" href="#__codelineno-25-12"></a><span class="w">  </span><span class="nx">formattedSummary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">formattedSummary</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span>
+</span><span id="__span-25-13"><a id="__codelineno-25-13" name="__codelineno-25-13" href="#__codelineno-25-13"></a><span class="w">    </span><span class="sr">/&lt;analysis&gt;[\s\S]*?&lt;\/analysis&gt;/</span><span class="p">,</span>
+</span><span id="__span-25-14"><a id="__codelineno-25-14" name="__codelineno-25-14" href="#__codelineno-25-14"></a><span class="w">    </span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+</span><span id="__span-25-15"><a id="__codelineno-25-15" name="__codelineno-25-15" href="#__codelineno-25-15"></a><span class="w">  </span><span class="p">)</span>
+</span><span id="__span-25-16"><a id="__codelineno-25-16" name="__codelineno-25-16" href="#__codelineno-25-16"></a>
+</span><span id="__span-25-17"><a id="__codelineno-25-17" name="__codelineno-25-17" href="#__codelineno-25-17"></a><span class="w">  </span><span class="c1">// Extract and format summary section</span>
+</span><span id="__span-25-18"><a id="__codelineno-25-18" name="__codelineno-25-18" href="#__codelineno-25-18"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">summaryMatch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">formattedSummary</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/&lt;summary&gt;([\s\S]*?)&lt;\/summary&gt;/</span><span class="p">)</span>
+</span><span id="__span-25-19"><a id="__codelineno-25-19" name="__codelineno-25-19" href="#__codelineno-25-19"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">summaryMatch</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-25-20"><a id="__codelineno-25-20" name="__codelineno-25-20" href="#__codelineno-25-20"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">summaryMatch</span><span class="p">[</span><span class="mf">1</span><span class="p">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s1">&#39;&#39;</span>
+</span><span id="__span-25-21"><a id="__codelineno-25-21" name="__codelineno-25-21" href="#__codelineno-25-21"></a><span class="w">    </span><span class="nx">formattedSummary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">formattedSummary</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span>
+</span><span id="__span-25-22"><a id="__codelineno-25-22" name="__codelineno-25-22" href="#__codelineno-25-22"></a><span class="w">      </span><span class="sr">/&lt;summary&gt;[\s\S]*?&lt;\/summary&gt;/</span><span class="p">,</span>
+</span><span id="__span-25-23"><a id="__codelineno-25-23" name="__codelineno-25-23" href="#__codelineno-25-23"></a><span class="w">      </span><span class="sb">`Summary:\n</span><span class="si">${</span><span class="nx">content</span><span class="p">.</span><span class="nx">trim</span><span class="p">()</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span>
+</span><span id="__span-25-24"><a id="__codelineno-25-24" name="__codelineno-25-24" href="#__codelineno-25-24"></a><span class="w">    </span><span class="p">)</span>
+</span><span id="__span-25-25"><a id="__codelineno-25-25" name="__codelineno-25-25" href="#__codelineno-25-25"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-25-26"><a id="__codelineno-25-26" name="__codelineno-25-26" href="#__codelineno-25-26"></a>
+</span><span id="__span-25-27"><a id="__codelineno-25-27" name="__codelineno-25-27" href="#__codelineno-25-27"></a><span class="w">  </span><span class="c1">// Clean up extra whitespace between sections</span>
+</span><span id="__span-25-28"><a id="__codelineno-25-28" name="__codelineno-25-28" href="#__codelineno-25-28"></a><span class="w">  </span><span class="nx">formattedSummary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">formattedSummary</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/\n\n+/g</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;\n\n&#39;</span><span class="p">)</span>
+</span><span id="__span-25-29"><a id="__codelineno-25-29" name="__codelineno-25-29" href="#__codelineno-25-29"></a>
+</span><span id="__span-25-30"><a id="__codelineno-25-30" name="__codelineno-25-30" href="#__codelineno-25-30"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">formattedSummary</span><span class="p">.</span><span class="nx">trim</span><span class="p">()</span>
+</span><span id="__span-25-31"><a id="__codelineno-25-31" name="__codelineno-25-31" href="#__codelineno-25-31"></a><span class="p">}</span>
+</span></code></pre></div>
+<p><strong>设计解析</strong></p>
+<p><code>formatCompactSummary()</code> 实现了"思维链剥离"的完整流程：</p>
+<ol>
+<li><strong>删除 <code>&lt;analysis&gt;</code> 块</strong>：正则 <code>/&lt;analysis&gt;[\s\S]*?&lt;\/analysis&gt;/</code> 匹配并删除整个分析过程（<code>[\s\S]*?</code> 是非贪婪匹配，防止错误删除多个分析块之间的内容）</li>
+<li><strong>提取 <code>&lt;summary&gt;</code> 块</strong>：把 <code>&lt;summary&gt;...&lt;/summary&gt;</code> 替换为 <code>Summary:\n[内容]</code>——去除 XML 标签，改用自然语言标题</li>
+<li><strong>清理多余空行</strong>：连续两个以上的空行压缩为两个</li>
+</ol>
+<p>整个处理流程的目的：模型的 <code>&lt;analysis&gt;</code> 块里可能有大量的中间推理（"让我先分析第 1 条消息，用户说了...然后...接下来..."），这些内容对最终摘要质量有贡献（帮助模型做更全面的思考），但注入到对话上下文里是纯粹的 token 浪费——它们对续接工作没有任何价值，还会占用宝贵的上下文空间。</p>
+<p>通过 <code>&lt;analysis&gt;</code> 标签给模型提供"可以自由草稿"的空间，再通过 <code>formatCompactSummary()</code> 在注入前剥离这个草稿，实现了"思考时充分展开，存储时精简高效"的两全其美。</p>
+<hr />
+<h2 id="610">6.10 微压缩的工作原理<a class="headerlink" href="#610" title="Permanent link">&para;</a></h2>
+<p>微压缩（MicroCompact）比全量压缩轻得多：它不生成语义摘要，只是把旧的工具调用结果内容替换为占位字符串。</p>
+<h3 id="time_based_mc_cleared_message"><code>TIME_BASED_MC_CLEARED_MESSAGE</code><a class="headerlink" href="#time_based_mc_cleared_message" title="Permanent link">&para;</a></h3>
+<p><strong>英文原文</strong>（来源：<code>src/services/compact/microCompact.ts</code>，第 36 行）</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">TIME_BASED_MC_CLEARED_MESSAGE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;[Old tool result content cleared]&#39;</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：[旧工具结果内容已清除]</p>
+</blockquote>
+<p>这是出现在被清除工具结果位置的占位文字。第四章（4.13 节）分析的 <code>SUMMARIZE_TOOL_RESULTS_SECTION</code> 就是为了应对这个机制——提前告诉模型"工具结果可能被清除"，让模型主动在文字输出里记录重要信息。</p>
+<p><strong>设计解析</strong></p>
+<p><strong>COMPACTABLE_TOOLS 的边界</strong> 定义了哪些工具的结果可以被微压缩：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">COMPACTABLE_TOOLS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Set</span><span class="o">&lt;</span><span class="kt">string</span><span class="o">&gt;</span><span class="p">([</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="w">  </span><span class="nx">FILE_READ_TOOL_NAME</span><span class="p">,</span><span class="w">    </span><span class="c1">// Read</span>
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="w">  </span><span class="p">...</span><span class="nx">SHELL_TOOL_NAMES</span><span class="p">,</span><span class="w">    </span><span class="c1">// Bash, PowerShell</span>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="w">  </span><span class="nx">GREP_TOOL_NAME</span><span class="p">,</span><span class="w">         </span><span class="c1">// Grep</span>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="w">  </span><span class="nx">GLOB_TOOL_NAME</span><span class="p">,</span><span class="w">         </span><span class="c1">// Glob</span>
+</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a><span class="w">  </span><span class="nx">WEB_SEARCH_TOOL_NAME</span><span class="p">,</span><span class="w">   </span><span class="c1">// WebSearch</span>
+</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a><span class="w">  </span><span class="nx">WEB_FETCH_TOOL_NAME</span><span class="p">,</span><span class="w">    </span><span class="c1">// WebFetch</span>
+</span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a><span class="w">  </span><span class="nx">FILE_EDIT_TOOL_NAME</span><span class="p">,</span><span class="w">    </span><span class="c1">// Edit</span>
+</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a><span class="w">  </span><span class="nx">FILE_WRITE_TOOL_NAME</span><span class="p">,</span><span class="w">   </span><span class="c1">// Write</span>
+</span><span id="__span-27-10"><a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a><span class="p">])</span>
+</span></code></pre></div>
+<p>注意<strong>不在</strong>这个集合里的工具：AgentTool、TaskTools、AskUserQuestion、ScheduleCronTool 等。这些工具的结果包含状态信息或交互结果，不能被随意清除。被清除的只是"可重现"的工具结果——如果需要，模型可以重新调用 Read 或 Grep 获取相同内容；但 Agent 的执行结果是一次性的，清除就永久丢失了。</p>
+<h3 id="_1">时间触发型微压缩<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
+<p><strong>设计解析</strong>（来源：<code>microCompact.ts</code>，第 411–444 行）</p>
+<p>时间触发的逻辑：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>距上次 assistant 消息的时间 &gt; gapThresholdMinutes（配置值）
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>→ 清除所有旧的 COMPACTABLE 工具结果（保留最近 keepRecent 个）
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>→ 替换为 TIME_BASED_MC_CLEARED_MESSAGE
+</span></code></pre></div>
+<p>时间触发的背景来自 prompt cache 机制：API 的 prompt cache 在不活跃 5 分钟后过期。如果用户暂停使用超过阈值时间，下次发送消息时 cache 已经失效，整个前缀需要重写。这时，旧的工具结果内容必然要被重新发送到 API——这是浪费 token 的最糟糕时机（不是 cache_read，而是 cache_write 或 uncached）。</p>
+<p>时间触发微压缩在 cache 失效之前（即用户发送下一条消息时）提前清除旧工具结果，减少需要重写的内容量。这是一个"知道 cache 将要失效，提前清理"的主动优化。</p>
+<h3 id="cached_microcompact">缓存编辑型微压缩（CACHED_MICROCOMPACT）<a class="headerlink" href="#cached_microcompact" title="Permanent link">&para;</a></h3>
+<p>这是更精密的变体，通过 API 层的 <code>cache_edits</code> 机制，在<strong>不修改本地消息内容</strong>的情况下，通知服务器端删除特定工具结果。这样做的好处是：本地消息历史保持完整（便于用户查看完整对话），但服务器端的缓存 prefix 中不再包含这些被删除的内容。</p>
+<p>缓存编辑型微压缩适用于 cache 仍然热的情况——直接清除内容会破坏缓存 key（content hash 变了），而 cache_edits 是服务器端的"软删除"，不影响缓存 key。</p>
+<hr />
+<h2 id="611">6.11 会话记忆压缩：第三层架构<a class="headerlink" href="#611" title="Permanent link">&para;</a></h2>
+<p>会话记忆压缩（Session Memory Compact）是全量压缩的高效替代路径。</p>
+<p><strong>核心思路</strong>：在每次会话进行时，系统会持续提取并更新"会话记忆"——一个存储在 <code>.claude/session_memory.md</code> 里的结构化文档，记录当前工作的关键信息。当需要压缩时，不重新调用 LLM 生成摘要，而是直接读取这个已维护好的会话记忆文件，用它作为"摘要"注入到新上下文里。</p>
+<p><strong>为什么这样更好</strong>：全量压缩需要一次额外的 API 调用（用于生成摘要），这个调用会有延迟，且摘要质量依赖于单次 LLM 运行的表现。会话记忆是<strong>增量维护</strong>的——每轮对话都在更新，从多个时间点积累信息，而非在压缩时一次性生成。</p>
+<p><strong>配置参数</strong>（来源：<code>sessionMemoryCompact.ts</code>，第 57–61 行）：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">DEFAULT_SM_COMPACT_CONFIG</span><span class="o">:</span><span class="w"> </span><span class="kt">SessionMemoryCompactConfig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a><span class="w">  </span><span class="nx">minTokens</span><span class="o">:</span><span class="w"> </span><span class="kt">10_000</span><span class="p">,</span><span class="w">             </span><span class="c1">// 最少保留的 token 数</span>
+</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a><span class="w">  </span><span class="nx">minTextBlockMessages</span><span class="o">:</span><span class="w"> </span><span class="kt">5</span><span class="p">,</span><span class="w">        </span><span class="c1">// 最少保留的有文字块的消息数</span>
+</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a><span class="w">  </span><span class="nx">maxTokens</span><span class="o">:</span><span class="w"> </span><span class="kt">40_000</span><span class="p">,</span><span class="w">             </span><span class="c1">// 最多保留的 token 数上限</span>
+</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a><span class="p">}</span>
+</span></code></pre></div>
+<p><strong>保留哪些消息</strong> 的决策逻辑：
+1. 从上次摘要边界之后的消息开始
+2. 若保留的消息不足 10,000 token 或不足 5 条有文字的消息，则向前扩展（保留更多近期消息）
+3. 若保留的消息超过 40,000 token，则停止扩展（即使还没满足最小条件）
+4. 调整以不切断 tool_use/tool_result 配对（<code>adjustIndexToPreserveAPIInvariants()</code>）</p>
+<hr />
+<h2 id="612-prompt">6.12 压缩 Prompt 设计总结<a class="headerlink" href="#612-prompt" title="Permanent link">&para;</a></h2>
+<p>将本章分析的所有设计决策汇总，可以提炼出以下规律：</p>
+<p><strong>结构设计</strong></p>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>位置</th>
+<th>功能</th>
+<th>设计原则</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NO_TOOLS_PREAMBLE</td>
+<td>最前</td>
+<td>禁止工具调用</td>
+<td>首位约束 + 后果说明</td>
+</tr>
+<tr>
+<td>BASE/PARTIAL/UP_TO prompt</td>
+<td>主体</td>
+<td>引导摘要生成</td>
+<td>结构化输出 + 具体字段</td>
+</tr>
+<tr>
+<td>自定义指令</td>
+<td>主体末</td>
+<td>用户定制重点</td>
+<td>追加不覆盖</td>
+</tr>
+<tr>
+<td>NO_TOOLS_TRAILER</td>
+<td>最后</td>
+<td>重申约束</td>
+<td>轻量提醒</td>
+</tr>
+</tbody>
+</table>
+<p><strong>摘要的信息层次</strong></p>
+<p>9 个 Section 不是随机的——它们从背景到状态到续接，形成一个完整的信息漏斗。特别关键的设计点：
+- Section 6（All user messages）：保留全部而非摘要，防止解释性偏差
+- Section 9（Optional Next Step）：verbatim 引用防止任务漂移</p>
+<p><strong>三个变体的核心差异</strong></p>
+<table>
+<thead>
+<tr>
+<th>变体</th>
+<th>方向</th>
+<th>范围</th>
+<th>Section 9</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BASE</td>
+<td>-</td>
+<td>全部对话</td>
+<td>Optional Next Step</td>
+</tr>
+<tr>
+<td>PARTIAL (from)</td>
+<td>→</td>
+<td>仅最近消息</td>
+<td>Optional Next Step</td>
+</tr>
+<tr>
+<td>PARTIAL (up_to)</td>
+<td>←</td>
+<td>前段对话</td>
+<td>Context for Continuing Work</td>
+</tr>
+</tbody>
+</table>
+<p><strong>思维链剥离</strong></p>
+<p><code>&lt;analysis&gt;</code> 标签的设计将"思考过程"和"最终摘要"明确分离。前者提升质量，后者注入上下文。<code>formatCompactSummary()</code> 在注入之前完成分离，既得到了 CoT 的质量收益，又避免了 CoT 的 token 代价。</p>
+<p><strong>双重封锁的工程理由</strong></p>
+<p>PREAMBLE + TRAILER 的双重约束不是强迫症的产物——2.79% vs 0.01% 的工具调用率差异（Sonnet 4.6 vs 4.5）和 <code>maxTurns: 1</code> 的硬约束，使得工具调用在这个场景下的代价是"任务失败"。双重约束把这个失败率压到可接受范围内。</p>
+<hr />
+<blockquote>
+<p><strong>下一章</strong>：从具体的 prompt 分析回到设计原则的抽象。我们将把前六章中反复出现的设计模式归纳成十条可迁移的原则，每条原则都会指向它在 Claude Code 源码中的具体体现，以及如何在你自己的 LLM 应用中应用它。</p>
+</blockquote>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../05-tool-prompts/" class="md-footer__link md-footer__link--prev" aria-label="上一页: 第五章 工具 Prompt 全解析">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                第五章 工具 Prompt 全解析
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../07-design-principles/" class="md-footer__link md-footer__link--next" aria-label="下一页: 第七章 Prompt 设计的十条核心原则">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                第七章 Prompt 设计的十条核心原则
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "toc.follow", "search.highlight", "search.share", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
