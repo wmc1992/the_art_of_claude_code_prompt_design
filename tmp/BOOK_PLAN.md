@@ -25,7 +25,7 @@
 
 ## 源码范围
 
-**代码库路径**：`/Users/wangmingchao/WorkProject/wmc_git_space/tmp/claude-code/src/`
+**代码库路径**：`.../claude-code/src/`
 
 涉及的核心文件：
 
