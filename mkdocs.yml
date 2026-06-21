@@ -1,0 +1,70 @@
+site_name: Claude Code Prompt 设计艺术
+site_description: 深度剖析 Anthropic 如何用 Prompt 驱动世界最复杂的 AI 编程工具
+site_author: wmc
+docs_dir: docs
+
+theme:
+  name: material
+  language: zh
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: 切换至深色模式
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: 切换至浅色模式
+  font:
+    text: Noto Sans SC
+    code: JetBrains Mono
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+
+plugins:
+  - search:
+      lang: zh
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
+      title: 本页目录
+
+nav:
+  - 前言: 00-preface.md
+  - 正文:
+    - 第一章 系统概览: 01-overview.md
+    - 第二章 Prompt 组织架构: 02-architecture.md
+    - 第三章 Prompt 工程机制: 03-engineering.md
+    - 第四章 主系统 Prompt 全解析: 04-system-prompt.md
+    - 第五章 工具 Prompt 全解析: 05-tool-prompts.md
+    - 第六章 压缩摘要 Prompt 全解析: 06-compact-prompts.md
+    - 第七章 Prompt 设计的十条核心原则: 07-design-principles.md
+  - 附录:
+    - 附录 A：英文原版 Prompt 完整收录: appendix-a-english.md
+    - 附录 B：中文译文完整收录: appendix-b-chinese.md

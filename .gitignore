@@ -1,0 +1,7 @@
+site/
+.claude/
+__pycache__
+*.DS_Store
+.vscode
+tmp/*
+shell_commit.sh
