@@ -1,4 +1,4 @@
-# Claude Code Prompt 设计艺术：一部工业级 AI Agent 的指令工程全解
+# Claude Code Prompt 设计艺术
 
 **副标题：深度剖析 Anthropic 如何用 Prompt 驱动世界最复杂的 AI 编程工具**
 
