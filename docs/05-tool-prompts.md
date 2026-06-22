@@ -566,6 +566,7 @@ Important:
 > 当用户引用"斜线命令"或"/<某物>"（如 "/commit"、"/review-pr"）时，他们指的是一个 Skill。使用此工具来调用它。
 >
 > **重要**：
+>
 > - 可用的 Skill 列在对话中的 system-reminder 消息里
 > - 当 Skill 匹配用户的请求时，这是一个**阻塞要求**：在对任务生成任何其他响应之前调用相关的 Skill 工具
 > - **永远不要提及 Skill 而不实际调用此工具**
@@ -771,6 +772,7 @@ NOTE that you should not use this tool if there is only one trivial task to do. 
 > **任务状态**：pending（未开始）、in_progress（当前进行，**限一个**）、completed（完成）
 >
 > **重要**：任务描述必须有两种形式：
+>
 > - content：祈使形式（"Run tests"、"Build the project"）
 > - activeForm：现在进行时形式（"Running tests"、"Building the project"）
 >
