@@ -360,9 +360,103 @@ export function startDeferredPrefetches(): void {
 
 ---
 
-## 3.7 小结
+## 3.7 上下文窗口管理：测量替代预算
 
-本章介绍了 Claude Code prompt 系统的五个工程机制：
+在设计一个包含多个 Section 的 prompt 系统时，一个常见的直觉是：应该为每个部分预先规划 token 配额——系统 prompt 最多用 X token，工具描述最多用 Y token，对话历史最多用 Z token。
+
+Claude Code 的工程实践给出了一个不同的答案。
+
+### 没有 Section 预算，只有工具输出 cap
+
+在整个 Claude Code 源码中，找不到任何"prompt 各区域 token 配额"的约束。但 `src/constants/toolLimits.ts` 里有三个非常具体的限制：
+
+```typescript
+export const DEFAULT_MAX_RESULT_SIZE_CHARS = 50_000
+export const MAX_TOOL_RESULT_TOKENS = 100_000
+export const MAX_TOOL_RESULTS_PER_MESSAGE_CHARS = 200_000
+```
+
+> **中文附注**：`DEFAULT_MAX_RESULT_SIZE_CHARS`：单个工具结果在存入磁盘前的最大字符数；超出时，结果写入文件，模型收到文件路径而非完整内容。`MAX_TOOL_RESULT_TOKENS`：单个工具结果的 token 上限（约 400KB 文本）。`MAX_TOOL_RESULTS_PER_MESSAGE_CHARS`：单轮内所有并行工具结果的字符总上限——防止 N 个工具各自返回 40K，合计 400K 塞入同一个 user message。
+
+这是 Claude Code 中**唯一真正意义上的 token 预算**——约束的对象是工具结果（下游输出），而非 prompt 各区域的大小（上游分配）。
+
+理由是清晰的：prompt 各区域的内容由工程师写定，大小相对稳定；而工具结果来自文件系统、命令输出、网络请求，大小不受控，不设 cap 就可能被单次工具调用把整个上下文窗口撑满。
+
+### 压缩缓冲：安全边距而非分区上限
+
+Claude Code 在上下文窗口末端保留一块空间，来自 `src/services/compact/autoCompact.ts`：
+
+```typescript
+export const AUTOCOMPACT_BUFFER_TOKENS = 13_000
+export const MANUAL_COMPACT_BUFFER_TOKENS = 3_000
+```
+
+> **中文附注**：`AUTOCOMPACT_BUFFER_TOKENS`：自动压缩阈值中预留的缓冲——有效上下文窗口大小 = 模型上下文大小 - 13K。当实际消耗接近有效窗口时，自动触发 compact。`MANUAL_COMPACT_BUFFER_TOKENS`：未启用自动压缩时，为手动 `/compact` 命令保留的 3K 缓冲。
+
+这两个常量是**安全边距**，不是分区配额。含义是"在触发压缩前，留出这一轮 API 请求还能继续工作的空间"。整个上下文窗口被视为统一的空间，不同内容类型之间没有硬性分区。
+
+### 实时测量：观测结构而非分配结构
+
+`src/utils/analyzeContext.ts` 实现了一套上下文使用量的实时测量框架，将当前上下文分为多个类别：
+
+```
+System prompt  /  System tools  /  MCP tools  /
+Memory files   /  Skills        /  Messages   /
+Reserved buffer  /  Free space
+```
+
+关键在于，这套分类是**观测结构**，不是**分配结构**。代码计算每个类别实际占用了多少 token，然后在 `/status` 命令中可视化展示；但没有任何逻辑基于这些测量值来限制"某类别不能超过 N token"：
+
+```typescript
+// 典型的类别创建逻辑
+if (systemPromptTokens > 0) {
+  cats.push({
+    name: 'System prompt',
+    tokens: systemPromptTokens,  // 测量值，不是预算上限
+    color: 'promptBorder',
+  })
+}
+```
+
+> **中文附注**：`cats.push()` 把各类别的实际消耗量推入数组用于可视化。决定是否触发压缩的逻辑在 autoCompact 模块，依据是**总消耗量**是否接近有效窗口，而非任何单个类别是否超过预算。测量是为了观测，不是为了限流。
+
+### ToolSearch 延迟加载：不预分配，按需消费
+
+工具描述的处理有一个值得注意的设计。Claude Code 的内置工具分两类：
+
+- **常驻工具**：每次请求都加载完整描述，始终占用上下文空间
+- **延迟工具（Deferred）**：默认只保留工具名，不加载详细描述；模型需要时通过 `ToolSearchTool` 按需拉取
+
+`analyzeContext.ts` 将延迟工具单独标记并从实际消耗中排除：
+
+```typescript
+cats.push({
+  name: 'System tools (deferred)',
+  tokens: deferredBuiltinTokens,
+  color: 'inactive',
+  isDeferred: true,  // 不计入实际上下文消耗
+})
+
+// 计算实际消耗时排除延迟类别
+const actualUsage = cats.reduce(
+  (sum, cat) => sum + (cat.isDeferred ? 0 : cat.tokens),
+  0,
+)
+```
+
+> **中文附注**：延迟工具的描述不占用上下文空间，只有在模型实际调用 `ToolSearchTool` 拉取之后才会进入 context。这是"不预分配、按需消费"的工程体现：工具描述的上下文消耗不在系统启动时固定，而是随实际使用量动态增长。
+
+### 设计时唯一的结构性决策：静态 / 动态边界
+
+回头看，Claude Code 在设计时做出的、真正影响 token 消耗的结构性决策只有一个：**哪些内容放在 `SYSTEM_PROMPT_DYNAMIC_BOUNDARY` 之前（静态，全局缓存），哪些放在之后（动态，每次重建）**。
+
+这个决策的依据不是"静态区域应该占多少 token"，而是"哪些内容足够稳定可以被全局缓存"。系统 prompt 静态区域最终展开成 3,000–4,000 token，是自然的结果，不是预先设定的目标。
+
+---
+
+## 3.8 小结
+
+本章介绍了 Claude Code prompt 系统的六个工程机制：
 
 | 机制 | 目的 | 核心手段 |
 |---|---|---|
@@ -371,8 +465,9 @@ export function startDeferredPrefetches(): void {
 | Feature Flag DCE | 不同功能配置间的代码和 prompt 隔离 | `bun:bundle` + `feature()` |
 | 用户分层 | 内外用户的 prompt 差异化 | `process.env.USER_TYPE === 'ant'` |
 | 并行预取 | 降低启动延迟和首次响应延迟 | 模块加载期间触发异步 I/O |
+| 上下文窗口管理 | 防止上下文溢出，控制下游输入规模 | 工具结果 cap + 压缩缓冲 + 延迟加载 |
 
-这五个机制共同服务于一个目标：**在 prompt 足够详细（能引导正确行为）和足够经济（不产生不必要的成本和延迟）之间取得平衡**。理解了这些机制，就能理解为什么 Claude Code 的 prompt 在设计上总是在精确控制"什么内容在什么时候以什么形式出现"——每一处看似小的设计决策，背后都有可量化的成本或质量考量。
+这六个机制共同服务于一个目标：**在 prompt 足够详细（能引导正确行为）和足够经济（不产生不必要的成本和延迟）之间取得平衡**。理解了这些机制，就能理解为什么 Claude Code 的 prompt 在设计上总是在精确控制"什么内容在什么时候以什么形式出现"——每一处看似小的设计决策，背后都有可量化的成本或质量考量。
 
 ---
 
