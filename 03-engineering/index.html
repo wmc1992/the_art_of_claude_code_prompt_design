@@ -692,7 +692,79 @@
   <a href="#37" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3.7 小结
+        3.7 上下文窗口管理：测量替代预算
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.7 上下文窗口管理：测量替代预算">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#section-cap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        没有 Section 预算，只有工具输出 cap
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        压缩缓冲：安全边距而非分区上限
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        实时测量：观测结构而非分配结构
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#toolsearch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ToolSearch 延迟加载：不预分配，按需消费
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        设计时唯一的结构性决策：静态 / 动态边界
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#38" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.8 小结
       
     </span>
   </a>
@@ -1104,7 +1176,79 @@
   <a href="#37" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3.7 小结
+        3.7 上下文窗口管理：测量替代预算
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.7 上下文窗口管理：测量替代预算">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#section-cap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        没有 Section 预算，只有工具输出 cap
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        压缩缓冲：安全边距而非分区上限
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        实时测量：观测结构而非分配结构
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#toolsearch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ToolSearch 延迟加载：不预分配，按需消费
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        设计时唯一的结构性决策：静态 / 动态边界
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#38" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.8 小结
       
     </span>
   </a>
@@ -1396,8 +1540,77 @@
 <p><strong>第四步，随新模型迭代清理。</strong> <code>"Remove this section when we launch numbat"</code> 表明他们知道这个规则是当前模型的补丁，新模型（numbat）上线后就可以移除。Prompt 不会无限累积临时补丁。</p>
 <p>这个工作流让 prompt 成为一个<strong>活的系统</strong>，而不是一份静态文档。每次模型更新，都会有一批旧规则被移除，一批新规则被引入，以应对新模型的新特征。</p>
 <hr />
-<h2 id="37">3.7 小结<a class="headerlink" href="#37" title="Permanent link">&para;</a></h2>
-<p>本章介绍了 Claude Code prompt 系统的五个工程机制：</p>
+<h2 id="37">3.7 上下文窗口管理：测量替代预算<a class="headerlink" href="#37" title="Permanent link">&para;</a></h2>
+<p>在设计一个包含多个 Section 的 prompt 系统时，一个常见的直觉是：应该为每个部分预先规划 token 配额——系统 prompt 最多用 X token，工具描述最多用 Y token，对话历史最多用 Z token。</p>
+<p>Claude Code 的工程实践给出了一个不同的答案。</p>
+<h3 id="section-cap">没有 Section 预算，只有工具输出 cap<a class="headerlink" href="#section-cap" title="Permanent link">&para;</a></h3>
+<p>在整个 Claude Code 源码中，找不到任何"prompt 各区域 token 配额"的约束。但 <code>src/constants/toolLimits.ts</code> 里有三个非常具体的限制：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">DEFAULT_MAX_RESULT_SIZE_CHARS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">50</span><span class="nx">_000</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">MAX_TOOL_RESULT_TOKENS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">100</span><span class="nx">_000</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">MAX_TOOL_RESULTS_PER_MESSAGE_CHARS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">200</span><span class="nx">_000</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：<code>DEFAULT_MAX_RESULT_SIZE_CHARS</code>：单个工具结果在存入磁盘前的最大字符数；超出时，结果写入文件，模型收到文件路径而非完整内容。<code>MAX_TOOL_RESULT_TOKENS</code>：单个工具结果的 token 上限（约 400KB 文本）。<code>MAX_TOOL_RESULTS_PER_MESSAGE_CHARS</code>：单轮内所有并行工具结果的字符总上限——防止 N 个工具各自返回 40K，合计 400K 塞入同一个 user message。</p>
+</blockquote>
+<p>这是 Claude Code 中<strong>唯一真正意义上的 token 预算</strong>——约束的对象是工具结果（下游输出），而非 prompt 各区域的大小（上游分配）。</p>
+<p>理由是清晰的：prompt 各区域的内容由工程师写定，大小相对稳定；而工具结果来自文件系统、命令输出、网络请求，大小不受控，不设 cap 就可能被单次工具调用把整个上下文窗口撑满。</p>
+<h3 id="_2">压缩缓冲：安全边距而非分区上限<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<p>Claude Code 在上下文窗口末端保留一块空间，来自 <code>src/services/compact/autoCompact.ts</code>：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">AUTOCOMPACT_BUFFER_TOKENS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">13</span><span class="nx">_000</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">MANUAL_COMPACT_BUFFER_TOKENS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">3</span><span class="nx">_000</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：<code>AUTOCOMPACT_BUFFER_TOKENS</code>：自动压缩阈值中预留的缓冲——有效上下文窗口大小 = 模型上下文大小 - 13K。当实际消耗接近有效窗口时，自动触发 compact。<code>MANUAL_COMPACT_BUFFER_TOKENS</code>：未启用自动压缩时，为手动 <code>/compact</code> 命令保留的 3K 缓冲。</p>
+</blockquote>
+<p>这两个常量是<strong>安全边距</strong>，不是分区配额。含义是"在触发压缩前，留出这一轮 API 请求还能继续工作的空间"。整个上下文窗口被视为统一的空间，不同内容类型之间没有硬性分区。</p>
+<h3 id="_3">实时测量：观测结构而非分配结构<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<p><code>src/utils/analyzeContext.ts</code> 实现了一套上下文使用量的实时测量框架，将当前上下文分为多个类别：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>System prompt  /  System tools  /  MCP tools  /
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>Memory files   /  Skills        /  Messages   /
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>Reserved buffer  /  Free space
+</span></code></pre></div>
+<p>关键在于，这套分类是<strong>观测结构</strong>，不是<strong>分配结构</strong>。代码计算每个类别实际占用了多少 token，然后在 <code>/status</code> 命令中可视化展示；但没有任何逻辑基于这些测量值来限制"某类别不能超过 N token"：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1">// 典型的类别创建逻辑</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">systemPromptTokens</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">  </span><span class="nx">cats</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">    </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;System prompt&#39;</span><span class="p">,</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="w">    </span><span class="nx">tokens</span><span class="o">:</span><span class="w"> </span><span class="kt">systemPromptTokens</span><span class="p">,</span><span class="w">  </span><span class="c1">// 测量值，不是预算上限</span>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="w">    </span><span class="nx">color</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;promptBorder&#39;</span><span class="p">,</span>
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="w">  </span><span class="p">})</span>
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="p">}</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：<code>cats.push()</code> 把各类别的实际消耗量推入数组用于可视化。决定是否触发压缩的逻辑在 autoCompact 模块，依据是<strong>总消耗量</strong>是否接近有效窗口，而非任何单个类别是否超过预算。测量是为了观测，不是为了限流。</p>
+</blockquote>
+<h3 id="toolsearch">ToolSearch 延迟加载：不预分配，按需消费<a class="headerlink" href="#toolsearch" title="Permanent link">&para;</a></h3>
+<p>工具描述的处理有一个值得注意的设计。Claude Code 的内置工具分两类：</p>
+<ul>
+<li><strong>常驻工具</strong>：每次请求都加载完整描述，始终占用上下文空间</li>
+<li><strong>延迟工具（Deferred）</strong>：默认只保留工具名，不加载详细描述；模型需要时通过 <code>ToolSearchTool</code> 按需拉取</li>
+</ul>
+<p><code>analyzeContext.ts</code> 将延迟工具单独标记并从实际消耗中排除：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nx">cats</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="w">  </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;System tools (deferred)&#39;</span><span class="p">,</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">  </span><span class="nx">tokens</span><span class="o">:</span><span class="w"> </span><span class="kt">deferredBuiltinTokens</span><span class="p">,</span>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="w">  </span><span class="nx">color</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;inactive&#39;</span><span class="p">,</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="w">  </span><span class="nx">isDeferred</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span><span class="w">  </span><span class="c1">// 不计入实际上下文消耗</span>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="p">})</span>
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="c1">// 计算实际消耗时排除延迟类别</span>
+</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a><span class="kd">const</span><span class="w"> </span><span class="nx">actualUsage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">cats</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span>
+</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a><span class="w">  </span><span class="p">(</span><span class="nx">sum</span><span class="p">,</span><span class="w"> </span><span class="nx">cat</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">sum</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="nx">cat</span><span class="p">.</span><span class="nx">isDeferred</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">0</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kt">cat.tokens</span><span class="p">),</span>
+</span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a><span class="w">  </span><span class="mf">0</span><span class="p">,</span>
+</span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a><span class="p">)</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：延迟工具的描述不占用上下文空间，只有在模型实际调用 <code>ToolSearchTool</code> 拉取之后才会进入 context。这是"不预分配、按需消费"的工程体现：工具描述的上下文消耗不在系统启动时固定，而是随实际使用量动态增长。</p>
+</blockquote>
+<h3 id="_4">设计时唯一的结构性决策：静态 / 动态边界<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<p>回头看，Claude Code 在设计时做出的、真正影响 token 消耗的结构性决策只有一个：<strong>哪些内容放在 <code>SYSTEM_PROMPT_DYNAMIC_BOUNDARY</code> 之前（静态，全局缓存），哪些放在之后（动态，每次重建）</strong>。</p>
+<p>这个决策的依据不是"静态区域应该占多少 token"，而是"哪些内容足够稳定可以被全局缓存"。系统 prompt 静态区域最终展开成 3,000–4,000 token，是自然的结果，不是预先设定的目标。</p>
+<hr />
+<h2 id="38">3.8 小结<a class="headerlink" href="#38" title="Permanent link">&para;</a></h2>
+<p>本章介绍了 Claude Code prompt 系统的六个工程机制：</p>
 <table>
 <thead>
 <tr>
@@ -1432,9 +1645,14 @@
 <td>降低启动延迟和首次响应延迟</td>
 <td>模块加载期间触发异步 I/O</td>
 </tr>
+<tr>
+<td>上下文窗口管理</td>
+<td>防止上下文溢出，控制下游输入规模</td>
+<td>工具结果 cap + 压缩缓冲 + 延迟加载</td>
+</tr>
 </tbody>
 </table>
-<p>这五个机制共同服务于一个目标：<strong>在 prompt 足够详细（能引导正确行为）和足够经济（不产生不必要的成本和延迟）之间取得平衡</strong>。理解了这些机制，就能理解为什么 Claude Code 的 prompt 在设计上总是在精确控制"什么内容在什么时候以什么形式出现"——每一处看似小的设计决策，背后都有可量化的成本或质量考量。</p>
+<p>这六个机制共同服务于一个目标：<strong>在 prompt 足够详细（能引导正确行为）和足够经济（不产生不必要的成本和延迟）之间取得平衡</strong>。理解了这些机制，就能理解为什么 Claude Code 的 prompt 在设计上总是在精确控制"什么内容在什么时候以什么形式出现"——每一处看似小的设计决策，背后都有可量化的成本或质量考量。</p>
 <hr />
 <blockquote>
 <p><strong>下一章</strong>：工程机制已经完全铺垫好。从第四章开始，我们进入本书的核心内容：逐节分析主系统 prompt 的每个 Section，对每段文本做原文呈现、中文附注和设计解析。</p>

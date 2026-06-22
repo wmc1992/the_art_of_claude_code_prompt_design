@@ -1286,7 +1286,68 @@
   <a href="#_40" class="md-nav__link">
     <span class="md-ellipsis">
       
-        十条原则的关系
+        原则十一：测量替代预算
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="原则十一：测量替代预算">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_41" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        定义
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#claude-code_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Claude Code 中的体现
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_42" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        为什么有效
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_43" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        如何迁移
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_44" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        十一条原则的关系
       
     </span>
   </a>
@@ -2079,7 +2140,68 @@
   <a href="#_40" class="md-nav__link">
     <span class="md-ellipsis">
       
-        十条原则的关系
+        原则十一：测量替代预算
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="原则十一：测量替代预算">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_41" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        定义
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#claude-code_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Claude Code 中的体现
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_42" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        为什么有效
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_43" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        如何迁移
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_44" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        十一条原则的关系
       
     </span>
   </a>
@@ -2117,7 +2239,7 @@
 <h1 id="prompt">第七章：Prompt 设计的十条核心原则<a class="headerlink" href="#prompt" title="Permanent link">&para;</a></h1>
 <p>前六章逐节分析了 Claude Code 的每一段 prompt，现在退出细节，向上看规律。</p>
 <p>在这些分析中，相同的设计模式反复出现。某条规则"失败了 N 次才有了这个约束"；某个选择"用命令名而非类别描述"；某处"同时禁止不足和过度"——这些不是偶然，而是在工业压力下反复锤炼出来的设计原则。</p>
-<p>本章将这些原则提炼成十条，每条原则配：<strong>定义</strong>、<strong>Claude Code 中的具体体现</strong>、<strong>为什么有效</strong>、<strong>如何迁移到你的设计</strong>。</p>
+<p>本章将这些原则提炼成十一条，每条原则配：<strong>定义</strong>、<strong>Claude Code 中的具体体现</strong>、<strong>为什么有效</strong>、<strong>如何迁移到你的设计</strong>。</p>
 <hr />
 <h2 id="_1">原则一：失败驱动<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <h3 id="_2">定义<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
@@ -2653,8 +2775,54 @@
 <p><strong>标记临时规则</strong>：在 prompt 注释（或文档）里标注哪些规则是针对当前模型版本的临时补丁，以及什么条件下可以移除。这避免了临时规则变成永久规则而永远不被清理。</p>
 <p><strong>分离"通用原则"和"模型特定规则"</strong>：前者（如"双边约束"、"禁止+替代"）跨模型版本有效；后者（如"不要过度添加注释"）只对特定模型的特定缺陷有效。分离这两类，便于在模型更新时快速识别哪些规则需要重新评估。</p>
 <hr />
-<h2 id="_40">十条原则的关系<a class="headerlink" href="#_40" title="Permanent link">&para;</a></h2>
-<p>这十条原则不是孤立的，它们有内在的逻辑层次：</p>
+<h2 id="_40">原则十一：测量替代预算<a class="headerlink" href="#_40" title="Permanent link">&para;</a></h2>
+<h3 id="_41">定义<a class="headerlink" href="#_41" title="Permanent link">&para;</a></h3>
+<p>为 prompt 各 Section 预先规划 token 配额是一个常见直觉，但不必要且难以维护。工业级系统的做法是：<strong>在下游（工具输出）设置具体 cap，实时测量整体消耗，保留压缩触发缓冲</strong>——而非把上下文窗口分成固定区域并预先分配大小。</p>
+<h3 id="claude-code_10">Claude Code 中的体现<a class="headerlink" href="#claude-code_10" title="Permanent link">&para;</a></h3>
+<p><strong>体现 A：工具输出 cap 是唯一的"预算"</strong>（第三章）</p>
+<p><code>toolLimits.ts</code> 里有三个精确的限制：</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-46-1"><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a><span class="nx">DEFAULT_MAX_RESULT_SIZE_CHARS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">50</span><span class="nx">_000</span><span class="w">        </span><span class="c1">// 单工具结果字符上限</span>
+</span><span id="__span-46-2"><a id="__codelineno-46-2" name="__codelineno-46-2" href="#__codelineno-46-2"></a><span class="nx">MAX_TOOL_RESULT_TOKENS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">100</span><span class="nx">_000</span><span class="w">              </span><span class="c1">// 单工具结果 token 上限</span>
+</span><span id="__span-46-3"><a id="__codelineno-46-3" name="__codelineno-46-3" href="#__codelineno-46-3"></a><span class="nx">MAX_TOOL_RESULTS_PER_MESSAGE_CHARS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">200</span><span class="nx">_000</span><span class="w">  </span><span class="c1">// 单轮工具结果总字符上限</span>
+</span></code></pre></div>
+<blockquote>
+<p><strong>中文附注</strong>：单个工具结果 50K 字符 / 10 万 token；单轮所有工具结果合计 20 万字符。这些是 Claude Code 中唯一具备强制性的 token 约束。约束的对象是外部输入（工具结果），而非 prompt 的各个 Section。</p>
+</blockquote>
+<p>这三个数字回答了"什么地方才需要设预算"：不是 prompt 各区域——那些内容是工程师写定的，相对稳定；而是工具输出——来自文件系统、命令行、网络请求的数据，大小不受控，不设 cap 就可能被单次工具调用把整个上下文窗口撑满。</p>
+<p><strong>体现 B：压缩缓冲而非分区上限</strong>（第三章）</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-47-1"><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a><span class="nx">AUTOCOMPACT_BUFFER_TOKENS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">13</span><span class="nx">_000</span><span class="w">   </span><span class="c1">// 自动压缩触发缓冲</span>
+</span><span id="__span-47-2"><a id="__codelineno-47-2" name="__codelineno-47-2" href="#__codelineno-47-2"></a><span class="nx">MANUAL_COMPACT_BUFFER_TOKENS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">3</span><span class="nx">_000</span><span class="w">  </span><span class="c1">// 手动 compact 保留空间</span>
+</span></code></pre></div>
+<p>Claude Code 没有说"对话历史最多用 X token"，而是说"在上下文末端保留 13K，当消耗接近这条线时触发压缩"。这是<strong>弹性边界</strong>——每次对话实际可用于历史的空间，是总窗口减去各固定开销后的剩余，不是预先规定的分区配额。</p>
+<p><strong>体现 C：测量用于可视化，不用于限流</strong>（第三章）</p>
+<p><code>analyzeContext.ts</code> 把上下文分为 System prompt / Tools / Memory files / Messages / Free space 等类别，实时计算每个类别的实际消耗，并在 <code>/status</code> 命令中可视化展示。但没有任何逻辑基于这些测量值来限制"某类别不能超过 N token"。<strong>测量是观测，不是约束。</strong> 决定是否触发压缩的判据只有一个：总消耗量是否接近有效上下文窗口。</p>
+<p><strong>体现 D：ToolSearch 延迟加载——不预分配，按需消费</strong>（第三章、第五章）</p>
+<p>低频工具默认不加载描述进 context，只在模型通过 <code>ToolSearchTool</code> 主动拉取时才进入上下文。延迟工具在计算实际消耗时被排除（<code>isDeferred: true</code>）。这是"不预分配"的工程体现：工具描述的上下文消耗不在系统启动时固定，而是随实际使用量动态增长。</p>
+<p><strong>体现 E：静态 / 动态边界——唯一的设计时结构决策</strong>（第二章、第三章）</p>
+<p><code>SYSTEM_PROMPT_DYNAMIC_BOUNDARY</code> 是 Claude Code 在设计时做出的、唯一真正影响 token 消耗分布的结构性决策：哪些内容固定（可全局缓存），哪些内容每次重建（动态注入）。这个决策的依据是<strong>缓存策略</strong>，不是大小预算。系统 prompt 静态区域最终展开约 3,000–4,000 token，是自然结果，不是预先设定的目标。</p>
+<h3 id="_42">为什么有效<a class="headerlink" href="#_42" title="Permanent link">&para;</a></h3>
+<p><strong>预分配的根本问题是不稳定</strong>。一个 prompt 系统在生命周期内，各组件会持续增长：新工具描述、新记忆文件、更长的系统规范……如果预先规定每个区域的配额，就需要在每次增长时重新平衡整个配额表，维护成本随系统规模线性增长。</p>
+<p><strong>测量 + 压缩的模式天然弹性</strong>。系统不关心哪个区域占了多少，只关心总量是否接近限制。哪个区域超出预期，哪里就成为优化对象——这个判断是数据驱动的，而非预先猜测的。</p>
+<p><strong>"什么不放进 context"比"各占多少"更重要</strong>。ToolSearch 延迟加载、工具结果超限写磁盘、历史超限触发压缩——这些机制的共同逻辑是控制什么内容进入上下文，而非规定进入之后各占多少。入口控制比内部分区更有效。</p>
+<h3 id="_43">如何迁移<a class="headerlink" href="#_43" title="Permanent link">&para;</a></h3>
+<p><strong>不需要做的事</strong>：
+- 不需要规划"系统 prompt 各 Section 的 token 配额"
+- 不需要预测"这个任务场景下上下文会有多满"</p>
+<p><strong>需要做的三件事</strong>：</p>
+<ol>
+<li>
+<p><strong>给外部输入设 cap</strong>：所有来自外部系统的数据（文件读取、命令输出、API 响应、RAG 检索结果）都应该有字符或 token 上限；超出时截断或写磁盘，模型收到引用路径而非完整内容。这是唯一需要预算数字的地方。</p>
+</li>
+<li>
+<p><strong>区分静态和动态内容</strong>：静态内容（相对不变的系统规范、工具描述）放前面，开启缓存；动态内容（每次不同的环境信息、用户上下文）放后面，按需注入。这个区分是 token 效率的核心，也是唯一需要在设计时做出的结构性决策。</p>
+</li>
+<li>
+<p><strong>保留压缩触发缓冲，而非精确控制分区</strong>：在接近限制之前留出缓冲，当超过阈值时触发对话历史压缩。不要试图精确平衡各部分的大小——让测量数据告诉你哪里出了问题。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_44">十一条原则的关系<a class="headerlink" href="#_44" title="Permanent link">&para;</a></h2>
+<p>这十一条原则不是孤立的，它们有内在的逻辑层次：</p>
 <p><strong>基础层：认识论原则</strong>
 - 原则一（失败驱动）：确定写什么——针对失败，不描述理想
 - 原则十（随版本演化）：确定何时更新——模型变了，prompt 也要变</p>
@@ -2665,11 +2833,12 @@
 - 原则六（禁止与替代成对）：每个约束都有出路</p>
 <p><strong>架构层：结构设计原则</strong>
 - 原则五（决策框架）：框架优于列表，覆盖未枚举情况
-- 原则八（权限不可传递）：授权是点状的，不能传播</p>
+- 原则八（权限不可传递）：授权是点状的，不能传播
+- 原则十一（测量替代预算）：资源管理靠测量和压缩，不靠预分配</p>
 <p><strong>认知层：思维设计原则</strong>
 - 原则七（认知框架）：给模型思维工具，改变内部驱动
 - 原则九（格式即行为）：格式约束思维过程，不只约束输出</p>
-<p>在实际设计 prompt 时，这十条原则应该共同应用：从基础层确定要解决什么问题，用内容层原则设计具体规则，用架构层原则组织规则，用认知层原则提升整体效果。</p>
+<p>在实际设计 prompt 时，这十一条原则应该共同应用：从基础层确定要解决什么问题，用内容层原则设计具体规则，用架构层原则组织规则，用认知层原则提升整体效果。</p>
 <hr />
 <h2 id="prompt_2">小结：工业级 Prompt 的特征<a class="headerlink" href="#prompt_2" title="Permanent link">&para;</a></h2>
 <p>Claude Code 的 prompt 体系，经过 Anthropic 工程团队在工业压力下的长期迭代，呈现出以下区别于"教程级 prompt"的特征：</p>
