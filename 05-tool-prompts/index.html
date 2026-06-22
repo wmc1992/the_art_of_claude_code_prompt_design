@@ -2248,13 +2248,15 @@
 <p>在主对话中执行 Skill</p>
 <p>当用户要求执行任务时，检查是否有任何可用的 Skill 匹配。Skill 提供专门的能力和领域知识。</p>
 <p>当用户引用"斜线命令"或"/&lt;某物&gt;"（如 "/commit"、"/review-pr"）时，他们指的是一个 Skill。使用此工具来调用它。</p>
-<p><strong>重要</strong>：
-- 可用的 Skill 列在对话中的 system-reminder 消息里
-- 当 Skill 匹配用户的请求时，这是一个<strong>阻塞要求</strong>：在对任务生成任何其他响应之前调用相关的 Skill 工具
-- <strong>永远不要提及 Skill 而不实际调用此工具</strong>
-- 不要调用已经在运行的 Skill
-- 不要将此工具用于内置 CLI 命令（如 /help、/clear 等）
-- 如果在当前对话轮次中看到 <code>&lt;command-name&gt;</code> 标签，Skill 已经被加载——直接按照指令操作，而不是再次调用此工具</p>
+<p><strong>重要</strong>：</p>
+<ul>
+<li>可用的 Skill 列在对话中的 system-reminder 消息里</li>
+<li>当 Skill 匹配用户的请求时，这是一个<strong>阻塞要求</strong>：在对任务生成任何其他响应之前调用相关的 Skill 工具</li>
+<li><strong>永远不要提及 Skill 而不实际调用此工具</strong></li>
+<li>不要调用已经在运行的 Skill</li>
+<li>不要将此工具用于内置 CLI 命令（如 /help、/clear 等）</li>
+<li>如果在当前对话轮次中看到 <code>&lt;command-name&gt;</code> 标签，Skill 已经被加载——直接按照指令操作，而不是再次调用此工具</li>
+</ul>
 </blockquote>
 <p><strong>设计解析</strong></p>
 <p><strong>"BLOCKING REQUIREMENT"</strong> 是整个工具 prompt 体系中唯一使用这个词组的地方。普通的限制用 "IMPORTANT" 或 "NEVER"，而 Skill 的调用要求用的是 "BLOCKING"——这个词来自并发编程，意味着"在这个条件满足之前，不能做任何其他事情"。</p>
@@ -2412,9 +2414,11 @@
 <blockquote>
 <p><strong>中文附注</strong>：</p>
 <p><strong>任务状态</strong>：pending（未开始）、in_progress（当前进行，<strong>限一个</strong>）、completed（完成）</p>
-<p><strong>重要</strong>：任务描述必须有两种形式：
-- content：祈使形式（"Run tests"、"Build the project"）
-- activeForm：现在进行时形式（"Running tests"、"Building the project"）</p>
+<p><strong>重要</strong>：任务描述必须有两种形式：</p>
+<ul>
+<li>content：祈使形式（"Run tests"、"Build the project"）</li>
+<li>activeForm：现在进行时形式（"Running tests"、"Building the project"）</li>
+</ul>
 <p><strong>任务管理</strong>：完成后立即标记（不要批量）；同一时间<strong>恰好一个</strong> in_progress；不再相关的任务从列表中完全删除</p>
 <p><strong>完成要求</strong>：只有<strong>完全完成</strong>时才标记为 completed；遇到错误时保持 in_progress；以下情况永远不标记为完成：测试失败、实现不完整、遇到未解决错误、找不到必要文件</p>
 </blockquote>
