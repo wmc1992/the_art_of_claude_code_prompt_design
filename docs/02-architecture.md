@@ -244,13 +244,9 @@ if (
 
 ---
 
-## 2.7 工具级 Prompt 的双层结构
+## 2.7 工具级 Prompt
 
-在 system prompt 之外，Claude Code 还有另一个维度的 prompt：**工具级 prompt**。每个工具有两层 prompt 内容，服务于不同的用途。
-
-### 第一层：`description` 字段
-
-`description` 是传入 Anthropic API 的工具描述，模型在决定调用哪个工具时依赖它。它需要简洁，通常在一到几行之间，告诉模型这个工具是干什么的、何时应该使用。
+在 system prompt 之外，Claude Code 还有另一个维度的 prompt：**工具级 prompt**。每个工具的 prompt 内容来自各工具目录下的 `prompt.ts` 文件，通过工具定义的 `description` 字段传递给模型。
 
 以 GlobTool 为例（`src/tools/GlobTool/prompt.ts`）：
 
@@ -284,13 +280,9 @@ export function getDescription(): string {
 
 > **中文附注**：基于 ripgrep 的强大搜索工具。使用说明：搜索任务**始终**使用 Grep 工具，**绝不**通过 Bash 命令调用 `grep` 或 `rg`，Grep 工具已针对正确的权限和访问做了优化。支持完整正则语法。可通过 glob 或文件类型过滤。多种输出模式：`content` 显示匹配行，`files_with_matches` 只显示文件路径（默认），`count` 显示匹配数量。开放式多轮搜索使用 Agent 工具。模式语法使用 ripgrep 规则（非 grep）——字面大括号需要转义。多行匹配默认仅在单行内匹配，跨行模式需设置 `multiline: true`。
 
-注意 GrepTool description 的写法：它不仅说"我是什么"，还明确说"什么情况下**不该**用我（转而用 Agent 工具）"以及"ALWAYS...NEVER"这种强约束。这是 description 里就在做行为约束，而不是把所有约束都推到 system prompt 里。
+注意 GrepTool 的写法：它不仅说"我是什么"，还明确说"什么情况下**不该**用我（转而用 Agent 工具）"以及"ALWAYS...NEVER"这种强约束。
 
-### 第二层：详细使用说明（`prompt.ts`）
-
-Description 只是工具的"名片"。真正详细的行为规范存放在各工具目录下的 `prompt.ts` 文件中，这些内容通过 system prompt 或工具使用上下文传递给模型，告诉它工具的参数语义、边界情况、禁止操作、步骤顺序等。
-
-以 FileReadTool 为例，其 `renderPromptTemplate` 函数会生成这样的内容：
+以 FileReadTool 为例，其 `prompt.ts` 会生成这样的内容：
 
 ```
 Reads a file from the local filesystem. You can access any file directly by using this tool.
@@ -304,9 +296,7 @@ Usage:
 ...
 ```
 
-BashTool 的 `prompt.ts` 则长达 369 行，包含 Git 安全协议、沙箱约束、commit 步骤化流程、PR 创建指引等完整规范。这是"工具使用手册"维度最丰富的一个，将在第五章作为第一档工具的第一个案例详细分析。
-
-**Description 与使用说明的关系可以这样理解**：Description 决定模型是否选择这个工具，使用说明决定模型如何正确使用这个工具。两者服务于不同的决策时刻，缺一不可。
+BashTool 的 `prompt.ts` 则长达 369 行，包含 Git 安全协议、沙箱约束、commit 步骤化流程、PR 创建指引等规范。这是工具 prompt 中内容最丰富的一个，将在第五章作为第一档工具的第一个案例详细分析。
 
 ---
 
@@ -366,7 +356,7 @@ BashTool 的 `prompt.ts` 则长达 369 行，包含 Git 安全协议、沙箱约
 
 **第二层：静态/动态边界。** `SYSTEM_PROMPT_DYNAMIC_BOUNDARY` 将 prompt 分为可全局缓存的稳定内容和必须动态计算的用户特定内容，让缓存机制能够最大化复用率。
 
-**第三层：工具级双层 Prompt。** 每个工具有简短的 `description`（决定模型是否调用它）和详细的使用说明（决定模型如何调用它）。两者服务于不同的决策时刻，设计原则也不同。
+**第三层：工具级 Prompt。** 每个工具有来自 `prompt.ts` 的使用说明，通过工具定义的 `description` 字段传递给模型。
 
 理解了这个架构，后续章节对具体 prompt 内容的分析就有了结构上的坐标系。第四章开始的所有 Section 分析，都将对应到上面图中的某个具体位置。
 

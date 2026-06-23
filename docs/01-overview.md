@@ -275,7 +275,7 @@ Claude Code 共有 43 个工具目录，覆盖的能力如下：
 | `TaskOutputTool` | 任务输出记录 |
 | `McpAuthTool` | MCP 认证 |
 
-这 43 个工具的每一个，都有对应的 prompt——既有传入 API 的简短描述（`description` 字段），也有详细的行为规范（各工具的 `prompt.ts` 文件）。第五章将逐一分析其中设计最丰富的工具。
+这 43 个工具的每一个，都有对应的 prompt，内容来自各工具的 `prompt.ts` 文件。第五章将逐一分析其中设计最丰富的工具。
 
 ---
 

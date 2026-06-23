@@ -1064,7 +1064,7 @@ Use this tool only when you are blocked on a decision that is genuinely the user
 
 ### A.2.6 第三档工具 Prompt 索引
 
-以下工具的 prompt 较短，均为 20 行以内的 description 字段：
+以下工具的 prompt 较短，均为 20 行以内：
 
 | 工具 | 来源文件 | 行数 |
 |---|---|---|
