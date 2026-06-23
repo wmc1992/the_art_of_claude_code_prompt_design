@@ -602,38 +602,10 @@
   <a href="#27-prompt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2.7 工具级 Prompt 的双层结构
+        2.7 工具级 Prompt
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="2.7 工具级 Prompt 的双层结构">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#description" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        第一层：description 字段
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#promptts" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        第二层：详细使用说明（prompt.ts）
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1030,38 +1002,10 @@
   <a href="#27-prompt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2.7 工具级 Prompt 的双层结构
+        2.7 工具级 Prompt
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="2.7 工具级 Prompt 的双层结构">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#description" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        第一层：description 字段
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#promptts" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        第二层：详细使用说明（prompt.ts）
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1294,10 +1238,8 @@
 </blockquote>
 <p>这一设计说明：<strong>Claude Code 不是"同一个 AI 在不同场景下"，而是在不同配置下使用完全不同的 prompt 体系</strong>。普通模式的 prompt 强调谨慎、确认、不越权；自主模式的 prompt 强调行动、主动探索、减少停顿。这两套 prompt 体系从角色定义就开始分叉，不存在共用的"基础版本"。</p>
 <hr />
-<h2 id="27-prompt">2.7 工具级 Prompt 的双层结构<a class="headerlink" href="#27-prompt" title="Permanent link">&para;</a></h2>
-<p>在 system prompt 之外，Claude Code 还有另一个维度的 prompt：<strong>工具级 prompt</strong>。每个工具有两层 prompt 内容，服务于不同的用途。</p>
-<h3 id="description">第一层：<code>description</code> 字段<a class="headerlink" href="#description" title="Permanent link">&para;</a></h3>
-<p><code>description</code> 是传入 Anthropic API 的工具描述，模型在决定调用哪个工具时依赖它。它需要简洁，通常在一到几行之间，告诉模型这个工具是干什么的、何时应该使用。</p>
+<h2 id="27-prompt">2.7 工具级 Prompt<a class="headerlink" href="#27-prompt" title="Permanent link">&para;</a></h2>
+<p>在 system prompt 之外，Claude Code 还有另一个维度的 prompt：<strong>工具级 prompt</strong>。每个工具的 prompt 内容来自各工具目录下的 <code>prompt.ts</code> 文件，通过工具定义的 <code>description</code> 字段传递给模型。</p>
 <p>以 GlobTool 为例（<code>src/tools/GlobTool/prompt.ts</code>）：</p>
 <div class="language-typescript highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">DESCRIPTION</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`- Fast file pattern matching tool that works with any codebase size</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="sb">- Supports glob patterns like &quot;**/*.js&quot; or &quot;src/**/*.ts&quot;</span>
@@ -1326,10 +1268,8 @@
 <blockquote>
 <p><strong>中文附注</strong>：基于 ripgrep 的强大搜索工具。使用说明：搜索任务<strong>始终</strong>使用 Grep 工具，<strong>绝不</strong>通过 Bash 命令调用 <code>grep</code> 或 <code>rg</code>，Grep 工具已针对正确的权限和访问做了优化。支持完整正则语法。可通过 glob 或文件类型过滤。多种输出模式：<code>content</code> 显示匹配行，<code>files_with_matches</code> 只显示文件路径（默认），<code>count</code> 显示匹配数量。开放式多轮搜索使用 Agent 工具。模式语法使用 ripgrep 规则（非 grep）——字面大括号需要转义。多行匹配默认仅在单行内匹配，跨行模式需设置 <code>multiline: true</code>。</p>
 </blockquote>
-<p>注意 GrepTool description 的写法：它不仅说"我是什么"，还明确说"什么情况下<strong>不该</strong>用我（转而用 Agent 工具）"以及"ALWAYS...NEVER"这种强约束。这是 description 里就在做行为约束，而不是把所有约束都推到 system prompt 里。</p>
-<h3 id="promptts">第二层：详细使用说明（<code>prompt.ts</code>）<a class="headerlink" href="#promptts" title="Permanent link">&para;</a></h3>
-<p>Description 只是工具的"名片"。真正详细的行为规范存放在各工具目录下的 <code>prompt.ts</code> 文件中，这些内容通过 system prompt 或工具使用上下文传递给模型，告诉它工具的参数语义、边界情况、禁止操作、步骤顺序等。</p>
-<p>以 FileReadTool 为例，其 <code>renderPromptTemplate</code> 函数会生成这样的内容：</p>
+<p>注意 GrepTool 的写法：它不仅说"我是什么"，还明确说"什么情况下<strong>不该</strong>用我（转而用 Agent 工具）"以及"ALWAYS...NEVER"这种强约束。</p>
+<p>以 FileReadTool 为例，其 <code>prompt.ts</code> 会生成这样的内容：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>Reads a file from the local filesystem. You can access any file directly by using this tool.
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>Assume this tool is able to read all files on the machine. If the User provides a path to a
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>file assume that path is valid. It is okay to read a file that does not exist; an error will
@@ -1340,8 +1280,7 @@
 </span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>- By default, it reads up to 2000 lines starting from the beginning of the file
 </span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>...
 </span></code></pre></div>
-<p>BashTool 的 <code>prompt.ts</code> 则长达 369 行，包含 Git 安全协议、沙箱约束、commit 步骤化流程、PR 创建指引等完整规范。这是"工具使用手册"维度最丰富的一个，将在第五章作为第一档工具的第一个案例详细分析。</p>
-<p><strong>Description 与使用说明的关系可以这样理解</strong>：Description 决定模型是否选择这个工具，使用说明决定模型如何正确使用这个工具。两者服务于不同的决策时刻，缺一不可。</p>
+<p>BashTool 的 <code>prompt.ts</code> 则长达 369 行，包含 Git 安全协议、沙箱约束、commit 步骤化流程、PR 创建指引等规范。这是工具 prompt 中内容最丰富的一个，将在第五章作为第一档工具的第一个案例详细分析。</p>
 <hr />
 <h2 id="28">2.8 整体结构图<a class="headerlink" href="#28" title="Permanent link">&para;</a></h2>
 <p>把本章的所有层次放在一起，Claude Code 的 prompt 架构如下：</p>
@@ -1390,7 +1329,7 @@
 <p>本章揭示了 Claude Code prompt 的三层架构：</p>
 <p><strong>第一层：System Prompt 的 Section 机制。</strong> 通过 <code>systemPromptSection</code> 和 <code>DANGEROUS_uncachedSystemPromptSection</code> 两个工厂函数，将 system prompt 分解为独立的、可缓存的、按需激活的单元。函数名中的 <code>DANGEROUS</code> 是设计者对调用者施加的工程约束，而非单纯的命名风格。</p>
 <p><strong>第二层：静态/动态边界。</strong> <code>SYSTEM_PROMPT_DYNAMIC_BOUNDARY</code> 将 prompt 分为可全局缓存的稳定内容和必须动态计算的用户特定内容，让缓存机制能够最大化复用率。</p>
-<p><strong>第三层：工具级双层 Prompt。</strong> 每个工具有简短的 <code>description</code>（决定模型是否调用它）和详细的使用说明（决定模型如何调用它）。两者服务于不同的决策时刻，设计原则也不同。</p>
+<p><strong>第三层：工具级 Prompt。</strong> 每个工具有来自 <code>prompt.ts</code> 的使用说明，通过工具定义的 <code>description</code> 字段传递给模型。</p>
 <p>理解了这个架构，后续章节对具体 prompt 内容的分析就有了结构上的坐标系。第四章开始的所有 Section 分析，都将对应到上面图中的某个具体位置。</p>
 <hr />
 <blockquote>
