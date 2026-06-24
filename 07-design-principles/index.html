@@ -2254,37 +2254,37 @@
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Report outcomes faithfully: if tests fail, say so... Never claim &quot;all tests pass&quot; when output
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>shows failures... never characterize incomplete or broken work as done.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>如实报告结果：如果测试失败，就说出来……当输出显示失败时，绝不声称"所有测试通过"……绝不把不完整或损坏的工作描述为已完成。</p>
-</blockquote>
+</div>
 <p><strong>体现 B：commit 安全协议里的具体事故</strong></p>
 <p>BashTool 的 git commit 协议里有一条：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>CRITICAL: Always create NEW commits rather than amending, unless the user explicitly
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>requests a git amend. When a pre-commit hook fails, the commit did NOT happen — so
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>--amend would modify the PREVIOUS commit...
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p><strong>关键</strong>：始终创建<strong>新</strong>提交，而非修改已有提交——除非用户明确要求 <code>git amend</code>。当 pre-commit hook 失败时，提交<strong>并未发生</strong>——因此 <code>--amend</code> 会修改<strong>上一个</strong>提交……</p>
-</blockquote>
+</div>
 <p>这条规则描述的是一个精确的失败场景：hook 失败 → 模型误以为是提交失败 → 用 <code>--amend</code> 修复 → 实际上修改了前一个提交（不是当前任务的提交）→ 数据静默损坏。这不是预防性的假设，是被真实发生过的事故驱动的。</p>
 <p><strong>体现 C：<code>-uall</code> 标志的内存事故</strong></p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>IMPORTANT: Never use the -uall flag as it can cause memory issues on large repos.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p><strong>重要</strong>：绝不使用 <code>-uall</code> 标志，因为它可能在大型仓库中导致内存问题。</p>
-</blockquote>
+</div>
 <p>这么具体的 flag 约束，背后一定有真实事件：在大型仓库上运行 <code>git status -uall</code> 导致进程 OOM。</p>
 <p><strong>体现 D：PR 描述里的三个感叹号</strong></p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>making sure to look at all relevant commits (NOT just the latest commit, but ALL commits
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>that will be included in the pull request!!!)
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>确保查看所有相关提交（<strong>不只是</strong>最新提交，而是将被包含在 Pull Request 中的<strong>所有</strong>提交!!!）</p>
-</blockquote>
+</div>
 <p>感叹号在 Anthropic 的 prompt 里极其罕见。三个感叹号意味着这个错误（只分析最新提交）被反复犯过很多次。</p>
 <h3 id="_3">为什么有效<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
 <p>描述理想行为（"要彻底、要准确、要负责任"）对语言模型几乎没有作用——因为模型已经被训练成"尽力做到彻底和准确"，但它对什么是"彻底"的理解与人类不同。针对失败场景的规则给出了精确的失败识别条件（"当输出显示失败时"）和正确行为的边界（"不要说'所有测试通过'"）。</p>
@@ -2312,34 +2312,34 @@
 <p><strong>体现 B：任务追踪的"exactly one in_progress"</strong>（第五章）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Exactly ONE task must be in_progress at any time (not less, not more)
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>任何时候必须<strong>恰好有一个</strong>任务处于 in_progress 状态（不能更少，也不能更多）。</p>
-</blockquote>
+</div>
 <p>"not less"：不能在工作但没有任何 in_progress 任务（漏标）
 "not more"：不能同时有多个 in_progress 任务（多标）</p>
 <p><strong>体现 C：失败处理框架</strong>（第四章）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Don&#39;t retry the identical action blindly,
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>but don&#39;t abandon a viable approach after a single failure either.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>不要盲目重试完全相同的操作，但也不要在单次失败后就放弃一个可行的方案。</p>
-</blockquote>
+</div>
 <p>同时抑制两种对立行为：盲目重试（没有诊断就重做）和过度放弃（一次失败就切换策略）。</p>
 <p><strong>体现 D：代码风格规则的隐含双边</strong>（第四章）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Three similar lines of code is better than a premature abstraction.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>三行相似代码，胜过过早的抽象。</p>
-</blockquote>
+</div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>no speculative abstractions, but no half-finished implementations either.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>不要投机性的抽象，但也不要留下半成品的实现。</p>
-</blockquote>
+</div>
 <p>每条代码风格规则都有"但不是..."的隐含对立面：不要过度抽象（但也不要没有抽象），不要错误处理（但只在边界处验证），不要为未来需求设计（但也不要留下残缺的实现）。</p>
 <h3 id="_7">为什么有效<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
 <p>语言模型有一种"激活补偿"的倾向：当一个方向被强力抑制时，模型倾向于向反方向偏移。单独说"不要说测试失败时通过"，模型可能开始过度谨慎，把所有通过也标记为"可能有问题"。双边约束锁定了行为空间的两侧，让模型只能在两个边界之间的准确区域运行。</p>
@@ -2359,41 +2359,41 @@
 </span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>File search: Use Glob (NOT find or ls)
 </span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>Content search: Use Grep (NOT grep or rg)
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>读取文件：使用 Read（不是 cat/head/tail）
 编辑文件：使用 Edit（不是 sed/awk）
 写入文件：使用 Write（不是 echo &gt;/cat &lt;&lt;EOF）
 文件搜索：使用 Glob（不是 find 或 ls）
 内容搜索：使用 Grep（不是 grep 或 rg）</p>
-</blockquote>
+</div>
 <p>每个映射都有精确的"不使用"命令名：<code>cat</code>、<code>head</code>、<code>tail</code>、<code>sed</code>、<code>awk</code>、<code>echo</code>、<code>find</code>、<code>ls</code>、<code>grep</code>、<code>rg</code>。不是说"不要用系统命令替代专用工具"，而是枚举出模型最可能选择的具体命令名。</p>
 <p><strong>体现 B：Git Safety Protocol 里的具体标志</strong>（第五章）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>NEVER skip hooks (--no-verify, --no-gpg-sign, etc)
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>NEVER run destructive git commands (push --force, reset --hard, checkout ., restore ., clean -f, branch -D)
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>绝不跳过钩子（<code>--no-verify</code>、<code>--no-gpg-sign</code> 等）
 绝不执行破坏性 git 命令（<code>push --force</code>、<code>reset --hard</code>、<code>checkout .</code>、<code>restore .</code>、<code>clean -f</code>、<code>branch -D</code>）</p>
-</blockquote>
+</div>
 <p>精确枚举了每个危险操作的精确标志形式：<code>--no-verify</code>、<code>--no-gpg-sign</code>、<code>push --force</code>、<code>reset --hard</code>、<code>checkout .</code>、<code>restore .</code>、<code>clean -f</code>、<code>branch -D</code>。</p>
 <p><strong>体现 C：Sleep 避免规则里的具体 check 命令</strong>（第五章）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>If you must poll an external process, use a check command (e.g. `gh run view`) rather than
 </span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>sleeping first.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>如果必须轮询外部进程，使用检查命令（例如 <code>gh run view</code>）而非先执行 sleep。</p>
-</blockquote>
+</div>
 <p>不只是说"不要 sleep"，给出了替代方案，并附上了一个具体例子（<code>gh run view</code>），让规则立刻可操作。</p>
 <p><strong>体现 D：<code>file_path:line_number</code> 格式</strong>（第四章）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>When referencing specific functions or pieces of code include the pattern file_path:line_number
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>引用具体函数或代码片段时，使用 <code>文件路径:行号</code> 格式。</p>
-</blockquote>
+</div>
 <p>不是"引用代码时要包含位置信息"，而是指定了精确的格式 <code>file_path:line_number</code>。这个格式要求具体到可以直接套用，不需要模型再做解释。</p>
 <h3 id="_11">为什么有效<a class="headerlink" href="#_11" title="Permanent link">&para;</a></h3>
 <p>语言模型的词语匹配能力远强于概念匹配能力。当 prompt 里出现 <code>cat</code>，模型能在处理"读文件"任务时精确地把这个词语识别出来并应用约束；而"系统文件读取命令"这个抽象类别，模型需要额外的推理步骤才能确定 <code>cat</code> 属于这个类别。</p>
@@ -2410,19 +2410,19 @@
 <div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>Using dedicated tools allows the user to better understand and review your work.
 </span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>This is CRITICAL to assisting the user.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>使用专用工具能让用户更好地理解和审查你的工作。这对于辅助用户<strong>至关重要</strong>。</p>
-</blockquote>
+</div>
 <p>不只说"用 Read 不用 cat"，还说了为什么：<strong>用户可见性和可审查性</strong>。这个理由让模型在遇到规则未覆盖的边界情况时（比如，一个不在列表里的 shell 命令），可以自问："用这个命令是否有助于用户理解和审查？"——理由成了判断的标准。</p>
 <p><strong>体现 B：URL 生成约束的"unless you are confident"</strong>（第四章）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>IMPORTANT: You must NEVER generate or guess URLs for the user unless you are confident
 </span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>that the URLs are for helping the user with programming.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p><strong>重要</strong>：除非你确信这些 URL 是用来帮助用户进行编程的，否则<strong>绝不</strong>为用户生成或猜测 URL。</p>
-</blockquote>
+</div>
 <p>"unless you are confident"而非"unless explicitly instructed"——这个措辞把判断权交给了模型，并隐含了理由：不确定的 URL 会产生幻觉链接，而编程文档 URL 是有价值的。模型理解了这个理由，才能在"URL"和"编程帮助"之间做出正确判断。</p>
 <p><strong>体现 C：会话级缓存设计中的理由</strong>（第三章和第六章）</p>
 <div class="language-typescript highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="cm">/**</span>
@@ -2437,10 +2437,10 @@
 <div class="language-text highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>Every user who asks for &quot;9am&quot; gets `0 9`, and every user who asks for &quot;hourly&quot; gets `0 *`
 </span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>— which means requests from across the planet land on the API at the same instant.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>每个要求"上午 9 点"的用户都会得到 <code>0 9</code>，每个要求"每小时"的用户都会得到 <code>0 *</code>——这意味着来自全球各地的请求会在同一时刻涌入 API。</p>
-</blockquote>
+</div>
 <p>不只说"避免整点"，还解释了为什么：全球用户的集中触发会造成流量洪峰。理解了这个理由，模型在遇到"大约X点"和"恰好X点"时，能自己判断是否需要偏移，而不需要规则枚举每种情况。</p>
 <h3 id="_15">为什么有效<a class="headerlink" href="#_15" title="Permanent link">&para;</a></h3>
 <p>规则的力量来自覆盖范围。规则只覆盖被明确枚举的情况，理由覆盖<strong>所有类似情况</strong>。当模型理解了"为什么"，它就拥有了一个可以应用于未枚举情况的判断原则——这是规则无法提供的泛化能力。</p>
@@ -2459,32 +2459,32 @@
 </span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>actions that are hard to reverse, affect shared systems beyond your local environment,
 </span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>or could otherwise be risky or destructive, check with the user before proceeding.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>仔细考虑操作的可逆性和爆炸半径。通常，你可以自由执行本地、可逆的操作，如编辑文件或运行测试。但对于难以撤销、影响本地环境之外的共享系统或可能存在风险或破坏性的操作，在继续之前请与用户确认。</p>
-</blockquote>
+</div>
 <p>这个框架提供了两个维度：<strong>可逆性</strong>和<strong>爆炸半径</strong>。有了这两个维度，模型可以对任何操作做出是否需要确认的判断，无论这个操作是否在规则里被枚举。然后跟着是具体例子（破坏性操作、难以撤销的操作等），但这些例子是<strong>框架的说明</strong>，而非规则的全集。</p>
 <p><strong>体现 B：多命令执行决策树</strong>（第五章）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>If the commands are independent and can run in parallel, make multiple Bash tool calls
 </span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>If the commands depend on each other, use a single Bash call with &#39;&amp;&amp;&#39;
 </span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>Use &#39;;&#39; only when you need sequential but don&#39;t care if earlier commands fail
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>如果命令相互独立且可以并行运行，发起多个 Bash 工具调用
 如果命令相互依赖，使用单个 Bash 调用并用 <code>&amp;&amp;</code> 连接
 只有当你需要顺序执行但不在乎前面命令是否失败时才使用 <code>;</code></p>
-</blockquote>
+</div>
 <p>三个条件分别对应三个策略，覆盖了所有多命令场景。这不是枚举，而是按"独立性"和"失败容忍"两个维度构建的决策矩阵。</p>
 <p><strong>体现 C：Fork vs 新 Agent 的判断框架</strong>（第五章）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>Fork yourself (omit `subagent_type`) when the intermediate tool output isn&#39;t worth
 </span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>keeping in your context. The criterion is qualitative — &quot;will I need this output again&quot;
 </span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>— not task size.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>当中间工具输出不值得保留在你的上下文中时，Fork 自己（省略 <code>subagent_type</code>）。判断标准是定性的——"我将来还需要这个输出吗"——而不是任务大小。</p>
-</blockquote>
+</div>
 <p>明确给出判断标准："我将来还需要这个输出吗？"——这是一个可以应用于任何具体任务的判断框架，而不是"研究任务用 fork，实现任务用新 agent"之类的规则枚举（后者会有很多边界情况）。</p>
 <p><strong>体现 D：EnterPlanMode 的双版本触发条件</strong>（第五章）</p>
 <p>外部用户版的七条触发条件不是规则列表，而是一个"扩展的判断框架"：任何一个条件满足 → 进入规划模式。最后一条甚至给出了框架内部的等价条件："如果你会用 AskUserQuestion，就改用 EnterPlanMode"——这是框架的一致性保证，而非额外规则。</p>
@@ -2510,42 +2510,42 @@
 <div class="language-text highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>If your command is long running and you would like to be notified when it finishes —
 </span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>use `run_in_background`. No sleep needed.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>如果你的命令需要长时间运行且希望在完成时收到通知——使用 <code>run_in_background</code>。无需 sleep。</p>
-</blockquote>
+</div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>If you must poll an external process, use a check command (e.g. `gh run view`)
 </span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>rather than sleeping first.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>如果必须轮询外部进程，使用检查命令（例如 <code>gh run view</code>）而非先执行 sleep。</p>
-</blockquote>
+</div>
 <p>两个常见的 sleep 使用场景，各有具体的替代方案：长时任务用 <code>run_in_background</code>，轮询外部状态用 <code>gh run view</code>。</p>
 <p><strong>体现 C：Glob 的自我限制与替代引导</strong>（第五章）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>When you are doing an open ended search that may require multiple rounds of globbing
 </span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>and grepping, use the Agent tool instead.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>当你正在进行可能需要多轮 globbing 和 grepping 的开放式搜索时，改用 Agent 工具。</p>
-</blockquote>
+</div>
 <p>Glob 在自身的 prompt 里主动告知："这种情况下不用我，用 Agent"。禁止（不用 Glob）配上替代（用 Agent），而且这条"禁止"来自于被禁止的工具本身——这是"自我限制"的设计。</p>
 <p><strong>体现 D：注释规范的禁止与替代</strong>（第四章，内部用户）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>Default to writing no comments. Only add one when the WHY is non-obvious.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>默认不写注释。只有当"为什么"不显而易见时才添加一条注释。</p>
-</blockquote>
+</div>
 <p>禁止（默认不写注释）+ 替代条件（当 WHY 不明显时才写）+ 替代标准（隐藏约束、细微不变量、特定 bug 的变通方法）。</p>
 <p><strong>体现 E：AskUserQuestion 的规划模式替代</strong>（第五章）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>If you would use AskUserQuestion to clarify the approach, use EnterPlanMode instead.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>如果你会用 AskUserQuestion 来澄清实现方案，改用 EnterPlanMode 代替。</p>
-</blockquote>
+</div>
 <p>当 AskUserQuestion 被限制使用时，明确给出了替代工具（EnterPlanMode），以及替代的条件（需要澄清实现方式时）。</p>
 <h3 id="_23">为什么有效<a class="headerlink" href="#_23" title="Permanent link">&para;</a></h3>
 <p>没有出路的禁止会导致两种问题：要么模型仍然做被禁止的事情（因为它不知道该怎么完成任务），要么模型在需要某个能力时陷入困境（知道不能做但不知道可以做什么）。</p>
@@ -2562,49 +2562,49 @@
 <div class="language-text highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>Brief the agent like a smart colleague who just walked into the room — it hasn&#39;t seen
 </span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>this conversation, doesn&#39;t know what you&#39;ve tried, doesn&#39;t understand why this task matters.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>像向一个刚走进房间的聪明同事汇报一样简报 Agent——它没有看过这段对话，不知道你尝试过什么，也不理解这个任务为什么重要。</p>
-</blockquote>
+</div>
 <p>"刚走进房间的聪明同事"不是一条规则，而是一个认知框架。当模型在写 Agent prompt 时，它可以用这个角色来检验自己的写作：这段话对一个"刚走进房间"的人说清楚了吗？这个框架比任何具体的写作规则都更容易记住和应用。</p>
 <p><strong>体现 B：自主模式的"好同事"框架</strong>（第四章 getProactiveSection）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>A good colleague faced with ambiguity doesn&#39;t just stop — they investigate, reduce risk,
 </span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>and build understanding. Ask yourself: what don&#39;t I know yet? What could go wrong? What
 </span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>would I want to verify before calling this done?
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>一个好同事面对歧义时不会就此停下——他们会调查、降低风险、建立理解。问问自己：我还不知道什么？什么可能出错？在宣告完成之前，我想验证什么？</p>
-</blockquote>
+</div>
 <p>三个自问问题形成了一个持续工作的思维循环。不是规则（"遇到歧义时去读更多文件"），而是认知框架（"好同事会怎么想？"）——模型可以把任何未预见的场景套入这个框架。</p>
 <p><strong>体现 C：Kairos 模式的"terminalFocus"校准</strong>（第四章）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>Unfocused: The user is away. Lean heavily into autonomous action.
 </span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>Focused: The user is watching. Be more collaborative.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>未聚焦：用户不在场。大力倾向于自主行动。
 聚焦：用户正在观察。更加协作。</p>
-</blockquote>
+</div>
 <p>这不是规则，而是一个<strong>行为校准模型</strong>：根据用户是否在场来调整自主程度。模型获得了一个思维模型（"我是在独立工作还是在被观察？"），而不只是两条规则。</p>
 <p><strong>体现 D：压缩 prompt 里的 <code>&lt;analysis&gt;</code> scratchpad</strong>（第六章）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>Before providing your final summary, wrap your analysis in &lt;analysis&gt; tags to organize
 </span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>your thoughts and ensure you&#39;ve covered all necessary points.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>在提供最终摘要之前，将你的分析包裹在 <code>&lt;analysis&gt;</code> 标签中，以整理思路并确保涵盖了所有必要的要点。</p>
-</blockquote>
+</div>
 <p><code>&lt;analysis&gt;</code> 标签不是对模型行为的约束，而是一个<strong>认知工具</strong>——给模型提供了一个明确的"草稿空间"，让它可以在这里自由展开思考，而不必直接输出最终结论。这个工具实际上提升了摘要质量（比直接要求输出摘要效果更好）。</p>
 <p><strong>体现 E：BASE_COMPACT_PROMPT 里的"直接引用防止漂移"</strong>（第六章）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>include direct quotes from the most recent conversation showing exactly what task you were
 </span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>working on and where you left off. This should be verbatim to ensure there&#39;s no drift in
 </span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a>task interpretation.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>包含来自最近对话的直接引用，准确显示你正在处理的任务和停下来的地方。这应该是逐字引用，以确保任务解释没有漂移。</p>
-</blockquote>
+</div>
 <p>"verbatim to ensure there's no drift"——这里给了模型一个认知框架：摘要不是为了表达你的理解，而是为了<strong>防止解释偏差</strong>。模型理解了这个框架，就知道在摘要任务里，忠实复现原文比用自己的语言改写更重要。</p>
 <h3 id="_27">为什么有效<a class="headerlink" href="#_27" title="Permanent link">&para;</a></h3>
 <p>外部规则（"做 A，不做 B"）依赖于模型记住并执行规则的每个条目；认知框架（"想象你是一个好同事"）改变了模型对<strong>任务本身的理解</strong>，使正确行为成为理解任务的自然结果，而非服从规则的结果。</p>
@@ -2626,39 +2626,39 @@
 </span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a>CLAUDE.md files, always confirm first. Authorization stands for the scope specified,
 </span><span id="__span-32-4"><a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a>not beyond. Match the scope of your actions to what was actually requested.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>用户批准一次操作（如 git push）<strong>并不</strong>意味着他们在所有情况下都批准它，因此除非操作已提前在 CLAUDE.md 文件等持久指令中获得授权，否则始终先确认。授权的范围仅限于所指定的范围，不超出。将你操作的范围与实际请求的内容相匹配。</p>
-</blockquote>
+</div>
 <p>这条规则的核心是"Authorization stands for the scope specified, not beyond"——授权范围与授权完全对应，不能外延。</p>
 <p><strong>体现 B：CLAUDE.md 作为"持久授权"的单独处理</strong>（第四章）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>unless actions are authorized in advance in durable instructions like CLAUDE.md files
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>除非操作已提前在 CLAUDE.md 文件等持久指令中获得授权</p>
-</blockquote>
+</div>
 <p>CLAUDE.md 里的指令被视为"持久授权"——用户在 CLAUDE.md 里写了"始终自动提交"，就是对这个操作的广泛授权。这是权限不可传递原则的<strong>唯一例外</strong>：经过特定渠道（持久指令文件）的授权才能扩展到多次操作。</p>
 <p><strong>体现 C：BashTool 的 Git Safety Protocol</strong>（第五章）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>NEVER update the git config
 </span><span id="__span-34-2"><a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a>NEVER run destructive git commands (push --force, reset --hard...) unless the user
 </span><span id="__span-34-3"><a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a>explicitly requests these actions.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>绝不更新 git 配置
 绝不执行破坏性 git 命令（<code>push --force</code>、<code>reset --hard</code>……）——除非用户明确要求这些操作。</p>
-</blockquote>
+</div>
 <p>"explicitly requests"是关键词——每次破坏性操作都需要当次的明确请求，不能因为上次用户说了"这种情况下可以 force push"就推断"下次类似情况也可以"。</p>
 <p><strong>体现 D：Sandbox 的逐命令授权</strong>（第五章，sandbox 模式）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>Treat each command you execute with `dangerouslyDisableSandbox: true` individually.
 </span><span id="__span-35-2"><a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a>Even if you have recently run a command with this setting, you should default to running
 </span><span id="__span-35-3"><a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a>future commands within the sandbox.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>将每个使用 <code>dangerouslyDisableSandbox: true</code> 执行的命令单独处理。即使你最近用这个设置运行了一个命令，对于未来的命令也应默认在沙箱内运行。</p>
-</blockquote>
+</div>
 <p>用 <code>dangerouslyDisableSandbox: true</code> 运行了一个命令，不意味着下一个命令也可以用这个设置——每个命令独立判断，授权不传递。</p>
 <h3 id="_31">为什么有效<a class="headerlink" href="#_31" title="Permanent link">&para;</a></h3>
 <p>语言模型有强烈的"类比推理"倾向：如果情况 A 获得了授权，类似的情况 B 应该也可以。这种推理在自然对话中是有益的（上下文学习），但在 AI Agent 做高风险操作时是危险的——用户可能有充分理由在 A 情况下授权但在 B 情况下不授权，这些理由模型不一定能理解。</p>
@@ -2673,29 +2673,29 @@
 <p><strong>体现 A：<code>&lt;analysis&gt;</code> + <code>&lt;summary&gt;</code> 的双块格式</strong>（第六章）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>Your entire response must be plain text: an &lt;analysis&gt; block followed by a &lt;summary&gt; block.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>你的整个回应必须是纯文本：一个 <code>&lt;analysis&gt;</code> 块后跟一个 <code>&lt;summary&gt;</code> 块。</p>
-</blockquote>
+</div>
 <p>这个格式要求让模型先在 <code>&lt;analysis&gt;</code> 里自由展开思考，再在 <code>&lt;summary&gt;</code> 里给出结构化摘要。如果只要求输出摘要，模型会直接跳到结论；<code>&lt;analysis&gt;</code> 标签创造了一个中间步骤，强制模型先"思考后写作"，提升了摘要质量。格式要求成了认知要求。</p>
 <p><strong>体现 B：BASE_COMPACT_PROMPT 的 9 Section 结构</strong>（第六章）</p>
 <p>9 个明确命名的 Section（Primary Request, Key Technical Concepts, Files...），每个 Section 都有明确的内容要求。这个格式不只是让摘要更易读，它<strong>迫使模型覆盖所有必要的维度</strong>——如果没有这些 Section 标题，模型的自由摘要可能遗漏某些维度（如"所有用户消息"或"可选的下一步"）。格式起到了"思维清单"的作用。</p>
 <p><strong>体现 C：HEREDOC 的提交消息格式</strong>（第五章）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>ALWAYS pass the commit message via a HEREDOC... to ensure good formatting
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p><strong>始终</strong>通过 HEREDOC 传递提交消息……以确保格式正确。</p>
-</blockquote>
+</div>
 <p>HEREDOC 要求不只是格式偏好——它防止了 Co-Authored-By 署名的格式在不同 shell 里被错误转义。格式要求直接保证了功能正确性。</p>
 <p><strong>体现 D：<code>file_path:line_number</code> 格式</strong>（第四章）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a>include the pattern file_path:line_number to allow the user to easily navigate to the
 </span><span id="__span-38-2"><a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a>source code location
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>使用 <code>文件路径:行号</code> 格式，以便用户轻松导航到源代码位置。</p>
-</blockquote>
+</div>
 <p>这个格式要求让代码引用从"描述"变成了"可导航的链接"。格式直接改变了输出的实用价值——不只是更美观，而是功能质变。</p>
 <p><strong>体现 E：PR 创建的 HEREDOC 格式</strong>（第五章）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>Create PR using gh pr create with the format below. Use a HEREDOC to pass the body to
@@ -2710,24 +2710,24 @@
 </span><span id="__span-39-10"><a id="__codelineno-39-10" name="__codelineno-39-10" href="#__codelineno-39-10"></a>EOF
 </span><span id="__span-39-11"><a id="__codelineno-39-11" name="__codelineno-39-11" href="#__codelineno-39-11"></a>)&quot;
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>使用 <code>gh pr create</code> 创建 PR，通过 HEREDOC 传递主体以确保格式正确。PR 主体结构：<code>## Summary</code>（1-3 条要点）和 <code>## Test plan</code>（Markdown 检查清单）。</p>
-</blockquote>
+</div>
 <p>这个具体的格式模板把 PR 创建从"自由发挥"变成了"填写模板"。<code>## Summary</code> 和 <code>## Test plan</code> 的标题强制模型在生成 PR 描述时覆盖这两个维度，而非只写一段自由描述。</p>
 <p><strong>体现 F：TodoWriteTool 的 content + activeForm 双形式</strong>（第五章）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-40-1"><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a>IMPORTANT: Task descriptions must have two forms:
 </span><span id="__span-40-2"><a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a>- content: The imperative form (e.g., &quot;Run tests&quot;)
 </span><span id="__span-40-3"><a id="__codelineno-40-3" name="__codelineno-40-3" href="#__codelineno-40-3"></a>- activeForm: The present continuous form (e.g., &quot;Running tests&quot;)
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p><strong>重要</strong>：任务描述必须有两种形式：</p>
 <ul>
 <li>content：祈使形式（如 "Run tests"）</li>
 <li>activeForm：现在进行时形式（如 "Running tests"）</li>
 </ul>
-</blockquote>
+</div>
 <p>这个格式要求是 UI 需求，但它通过 prompt 约束来实现——格式要求直接服务于界面体验（in_progress 状态显示 activeForm）。</p>
 <h3 id="_35">为什么有效<a class="headerlink" href="#_35" title="Permanent link">&para;</a></h3>
 <p>结构化的输出格式在认知层面创造了"格式脚手架"——模型按照格式填充内容时，格式本身引导了思考的方向和范围。就像人类填写表格比自由写作更不容易遗漏信息，格式化的 prompt 让模型的输出更完整、更少遗漏。</p>
@@ -2785,9 +2785,10 @@
 </span><span id="__span-46-2"><a id="__codelineno-46-2" name="__codelineno-46-2" href="#__codelineno-46-2"></a><span class="nx">MAX_TOOL_RESULT_TOKENS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">100</span><span class="nx">_000</span><span class="w">              </span><span class="c1">// 单工具结果 token 上限</span>
 </span><span id="__span-46-3"><a id="__codelineno-46-3" name="__codelineno-46-3" href="#__codelineno-46-3"></a><span class="nx">MAX_TOOL_RESULTS_PER_MESSAGE_CHARS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">200</span><span class="nx">_000</span><span class="w">  </span><span class="c1">// 单轮工具结果总字符上限</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：单个工具结果 50K 字符 / 10 万 token；单轮所有工具结果合计 20 万字符。这些是 Claude Code 中唯一具备强制性的 token 约束。约束的对象是外部输入（工具结果），而非 prompt 的各个 Section。</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p>单个工具结果 50K 字符 / 10 万 token；单轮所有工具结果合计 20 万字符。这些是 Claude Code 中唯一具备强制性的 token 约束。约束的对象是外部输入（工具结果），而非 prompt 的各个 Section。</p>
+</div>
 <p>这三个数字回答了"什么地方才需要设预算"：不是 prompt 各区域——那些内容是工程师写定的，相对稳定；而是工具输出——来自文件系统、命令行、网络请求的数据，大小不受控，不设 cap 就可能被单次工具调用把整个上下文窗口撑满。</p>
 <p><strong>体现 B：压缩缓冲而非分区上限</strong>（第三章）</p>
 <div class="language-typescript highlight"><pre><span></span><code><span id="__span-47-1"><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a><span class="nx">AUTOCOMPACT_BUFFER_TOKENS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">13</span><span class="nx">_000</span><span class="w">   </span><span class="c1">// 自动压缩触发缓冲</span>

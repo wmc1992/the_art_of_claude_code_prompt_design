@@ -1317,9 +1317,10 @@
 </span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">  </span><span class="p">}</span>
 </span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="p">}</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：<code>splitSysPromptPrefix</code> 函数以 <code>SYSTEM_PROMPT_DYNAMIC_BOUNDARY</code> 为分界线，将 prompt 数组切分为静态块和动态块。静态块标记 <code>cacheScope: 'global'</code>（全局缓存），动态块标记 <code>cacheScope: null</code>（不参与跨用户缓存）。这个 scope 最终会对应到 API 请求中的 <code>cache_control</code> 字段。</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p><code>splitSysPromptPrefix</code> 函数以 <code>SYSTEM_PROMPT_DYNAMIC_BOUNDARY</code> 为分界线，将 prompt 数组切分为静态块和动态块。静态块标记 <code>cacheScope: 'global'</code>（全局缓存），动态块标记 <code>cacheScope: null</code>（不参与跨用户缓存）。这个 scope 最终会对应到 API 请求中的 <code>cache_control</code> 字段。</p>
+</div>
 <p>这也解释了为什么第二章中的 <code>SYSTEM_PROMPT_DYNAMIC_BOUNDARY</code> 注释里会有这样的警告：</p>
 <div class="language-typescript highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="cm">/**</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="cm"> * WARNING: Do not remove or reorder this marker without updating cache logic in:</span>
@@ -1360,9 +1361,10 @@
 </span><span id="__span-2-26"><a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="w">    </span><span class="p">)</span><span class="nx">.DISCOVER_SKILLS_TOOL_NAME</span>
 </span><span id="__span-2-27"><a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="w">  </span><span class="o">:</span><span class="w"> </span><span class="kt">null</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：使用 <code>feature()</code> 函数（来自 <code>bun:bundle</code>）做编译期条件判断。当某个 feature 未激活时，整个 <code>require()</code> 调用及其对应的模块代码会在打包阶段被彻底删除，不会出现在最终的发布产物中。<code>proactiveModule</code>、<code>BRIEF_PROACTIVE_SECTION</code>、<code>DISCOVER_SKILLS_TOOL_NAME</code> 等变量在对应 feature 未激活时均为 <code>null</code>，相关的 prompt 内容不会出现在任何用户的 system prompt 中。</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p>使用 <code>feature()</code> 函数（来自 <code>bun:bundle</code>）做编译期条件判断。当某个 feature 未激活时，整个 <code>require()</code> 调用及其对应的模块代码会在打包阶段被彻底删除，不会出现在最终的发布产物中。<code>proactiveModule</code>、<code>BRIEF_PROACTIVE_SECTION</code>、<code>DISCOVER_SKILLS_TOOL_NAME</code> 等变量在对应 feature 未激活时均为 <code>null</code>，相关的 prompt 内容不会出现在任何用户的 system prompt 中。</p>
+</div>
 <p>这套机制带来了两个直接收益：</p>
 <p><strong>第一，产物体积精简。</strong> 外部发布版本的 Claude Code 不包含 <code>PROACTIVE</code>、<code>KAIROS</code>、<code>EXPERIMENTAL_SKILL_SEARCH</code> 等实验性功能的代码，二进制体积更小，启动更快。</p>
 <p><strong>第二，prompt 内容的版本隔离。</strong> 不同功能配置的用户，收到的 system prompt 在内容上完全不同，而不是靠同一份 prompt 里的条件判断来区别对待。这意味着实验性功能的 prompt 从物理上就不存在于普通用户的运行环境中。</p>
@@ -1384,9 +1386,10 @@
 </span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">    </span><span class="p">]</span>
 </span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">  </span><span class="o">:</span><span class="w"> </span><span class="p">[]),</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：内部用户（<code>USER_TYPE === 'ant'</code>）会看到四条额外的注释规范：默认不写注释、不解释代码做什么（标识符已经说明了）、不轻易删除现有注释（可能编码了历史约束）、完成任务前必须实际验证。这四条规则不出现在外部用户的 prompt 中。旁边的注释表明，这是针对特定模型版本（Capybara）过度注释倾向的专项修复，计划在问题解决后移除或软化。</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p>内部用户（<code>USER_TYPE === 'ant'</code>）会看到四条额外的注释规范：默认不写注释、不解释代码做什么（标识符已经说明了）、不轻易删除现有注释（可能编码了历史约束）、完成任务前必须实际验证。这四条规则不出现在外部用户的 prompt 中。旁边的注释表明，这是针对特定模型版本（Capybara）过度注释倾向的专项修复，计划在问题解决后移除或软化。</p>
+</div>
 <p>以及输出效率的差异——内外两个版本可以说是完全不同的风格要求：</p>
 <p><strong>内部用户（<code>ant</code>）</strong>：</p>
 <div class="language-typescript highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">USER_TYPE</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;ant&#39;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -1402,15 +1405,15 @@
 </span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="sb">These user-facing text instructions do not apply to code or tool calls.`</span>
 </span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="p">}</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注（内部用户版）</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注（内部用户版）</p>
 <p><strong># 与用户沟通</strong></p>
 <p>在发送面向用户的文本时，你是在为一个真实的人写作，而不是在记录控制台日志。假设用户看不到大多数工具调用或思考过程——他们只能看到你的文字输出。在第一次工具调用之前，简要说明你打算做什么。在工作过程中，在关键时刻给出简短的更新：当你发现关键问题（一个 bug、一个根本原因）时，当你改变方向时，当你在没有更新的情况下取得进展时。</p>
 <p>在做更新时，假设这个人已经离开并失去了上下文。他们不知道你在途中创造的代号、缩写或简写，也没有跟踪你的过程。写作时让他们能够重新接上：使用完整的、语法正确的句子，不带无解释的术语，展开技术术语，宁可多解释一些。注意用户专业程度的线索；如果他们看起来是专家，稍微简洁一点；如果他们看起来是新手，多一些解释。</p>
 <p>以流畅的散文书写面向用户的文本，避免使用片段、过多的破折号、符号和记法或类似难以解析的内容。只在适当时使用表格：例如用于保存简短的可枚举事实（文件名、行号、通过/失败）或传达定量数据。不要把解释性推理塞进表格单元格——在前后解释。避免语义回溯：构造每个句子使人可以线性阅读，不需要重新解析之前的内容。</p>
 <p>最重要的是读者在没有脑力开销或后续问题的情况下理解你的输出，而不是你有多简洁。如果用户不得不重新阅读摘要或要求你解释，这将远远超过更短的第一次阅读节省的时间。根据任务匹配回应：一个简单的问题得到散文形式的直接回答，而不是标题和编号部分。在保持清晰的同时，也要保持简洁、直接，没有废话。避免填充语或陈述显而易见的内容。直接切入主题。不要过度强调不重要的过程细节，也不要用最高级词语来过度渲染小的成功或失败。适当时使用倒金字塔（以行动开头），如果关于你的推理或过程的某些内容如此重要以至于绝对必须出现在面向用户的文本中，将其保留到最后。</p>
 <p>这些面向用户的文本说明不适用于代码或工具调用。</p>
-</blockquote>
+</div>
 <p><strong>外部用户</strong>：</p>
 <div class="language-typescript highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">return</span><span class="w"> </span><span class="sb">`# Output efficiency</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
@@ -1425,8 +1428,8 @@
 </span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>
 </span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="sb">If you can say it in one sentence, don&#39;t use three. Prefer short, direct sentences over long explanations. This does not apply to code or tool calls.`</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注（外部用户版）</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注（外部用户版）</p>
 <p><strong># 输出效率</strong></p>
 <p><strong>重要</strong>：直接切入主题。先尝试最简单的方法，不要绕圈子。不要过度。要格外简洁。</p>
 <p>保持文字输出简短直接。以答案或行动开头，而非推理。省略填充词、前言和不必要的过渡。不要重述用户说的话——直接做。解释时，只包含用户理解所必需的内容。</p>
@@ -1437,7 +1440,7 @@
 <li>改变计划的错误或阻碍</li>
 </ul>
 <p>如果能用一句话说清楚，就不要用三句话。优先使用简短、直接的句子而非长篇解释。这不适用于代码或工具调用。</p>
-</blockquote>
+</div>
 <p><strong>这两段 prompt 的差异，揭示了一个重要的设计哲学</strong>：内部用户（工程师和研究员）需要模型在每一步都清晰表达推理和上下文，以便他们能够理解模型的决策过程并发现潜在问题；外部用户则更希望直接得到结果，过多的"思考过程展示"反而是噪音。同一个模型，通过不同的输出风格 prompt，能够呈现出截然不同的沟通特征。</p>
 <h3 id="user_type"><code>USER_TYPE</code> 的工程实现<a class="headerlink" href="#user_type" title="Permanent link">&para;</a></h3>
 <p>代码注释中有一个关键的工程约束值得单独说明：</p>
@@ -1445,9 +1448,10 @@
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1">// inlined at each callsite (not hoisted to a const) so the bundler can</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="c1">// constant-fold it to `false` in external builds and eliminate the branch.</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：<code>process.env.USER_TYPE === 'ant'</code> 是构建时通过 <code>--define</code> 注入的编译期常量。它<strong>必须</strong>在每个调用处内联（不能提升为一个 <code>const</code>），这样打包器才能在外部构建时将其常量折叠为 <code>false</code>，从而消除整个分支。</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p><code>process.env.USER_TYPE === 'ant'</code> 是构建时通过 <code>--define</code> 注入的编译期常量。它<strong>必须</strong>在每个调用处内联（不能提升为一个 <code>const</code>），这样打包器才能在外部构建时将其常量折叠为 <code>false</code>，从而消除整个分支。</p>
+</div>
 <p>这个注释说明了一个反直觉的代码规范：<strong>你不能用常量来简化代码</strong>。通常的工程直觉是"如果一个表达式在多处使用，应该提取为常量"。但在这里，<code>process.env.USER_TYPE === 'ant'</code> 必须在每个 <code>if</code> 判断处原样出现，不能这样写：</p>
 <div class="language-typescript highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1">// ❌ 错误写法：打包器无法静态分析这个变量</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">isAnt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">USER_TYPE</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;ant&#39;</span>
@@ -1482,12 +1486,13 @@
 </span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a><span class="c1">// eslint-disable-next-line custom-rules/no-top-level-side-effects</span>
 </span><span id="__span-9-20"><a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a><span class="nx">startKeychainPrefetch</span><span class="p">();</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：这三个副作用必须在所有其他 import 之前运行：
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p>这三个副作用必须在所有其他 import 之前运行：
 1. <code>profileCheckpoint</code> 在重量级模块求值开始之前标记入口
 2. <code>startMdmRawRead</code> 启动 MDM 子进程（<code>plutil</code>/<code>reg query</code>），让它们与后续约 135ms 的 import 过程并行运行
 3. <code>startKeychainPrefetch</code> 并行触发两次 macOS keychain 读取（OAuth + 旧版 API key）——否则 <code>isRemoteManagedSettingsEligible()</code> 会通过同步子进程调用顺序读取它们（在每次 macOS 启动时约需 65ms）</p>
-</blockquote>
+</div>
 <p>注释里的数字很关键：<strong>135ms</strong> 和 <strong>65ms</strong>。这两个操作如果顺序执行，会在模块加载期间额外增加 200ms 的等待——对于一个命令行工具来说，这是用户能明显感知到的延迟。通过在 import 开始之前就触发这两个异步操作，它们可以与后续 135ms 的模块加载并行进行，在用户看来，工具的启动时间就缩短了。</p>
 <p>这与 prompt 设计有什么关系？</p>
 <p><strong>直接关系</strong>：system prompt 的动态部分（环境信息、记忆文件）需要从文件系统或系统 API 读取数据。如果等到需要构建 system prompt 时才开始读取，用户需要等待这些 I/O 操作完成。通过预取，这些数据在模块加载期间就已经开始准备，等到构建 system prompt 时，大概率可以直接使用已经就绪的结果。</p>
@@ -1512,9 +1517,10 @@
 </span><span id="__span-10-17"><a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a><span class="w">  </span><span class="ow">void</span><span class="w"> </span><span class="nx">prefetchOfficialMcpUrls</span><span class="p">();</span>
 </span><span id="__span-10-18"><a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a><span class="p">}</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：启动后台预取和维护工作，这些工作在第一次渲染之前不需要。从 <code>setup()</code> 中延迟，以减少关键启动路径上的事件循环竞争和子进程生成。在 REPL 渲染完成后调用。注释说明：这些预取在"用户还在输入时"完成（consumed at first API call, user is still typing），即利用用户输入第一条消息的时间窗口来预热数据，让第一次 API 调用时就能拿到已缓存的用户上下文、系统上下文等信息。</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p>启动后台预取和维护工作，这些工作在第一次渲染之前不需要。从 <code>setup()</code> 中延迟，以减少关键启动路径上的事件循环竞争和子进程生成。在 REPL 渲染完成后调用。注释说明：这些预取在"用户还在输入时"完成（consumed at first API call, user is still typing），即利用用户输入第一条消息的时间窗口来预热数据，让第一次 API 调用时就能拿到已缓存的用户上下文、系统上下文等信息。</p>
+</div>
 <p>这个设计思路可以概括为：<strong>把所有 I/O 操作都尽早触发，与用户的人类时间（思考、输入）重叠，而不是让用户等待机器时间</strong>。</p>
 <hr />
 <h2 id="36-prompt">3.6 Prompt 随模型版本演化<a class="headerlink" href="#36-prompt" title="Permanent link">&para;</a></h2>
@@ -1530,9 +1536,10 @@
 </span></code></pre></div>
 <div class="language-typescript highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1">// @[MODEL LAUNCH]: Remove this section when we launch numbat.</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：这些注释是"模型发布"标记，记录了某条规则在哪个模型版本中被引入、为什么引入，以及预期在什么条件下可以撤销。例如：Capybara v8 的虚假声明率从 v4 的 16.7% 上升到 29-30%，因此加入了专项规则；Capybara 默认有过度注释的倾向，因此加入了注释规范的压制规则，计划在模型自然改善后移除。</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p>这些注释是"模型发布"标记，记录了某条规则在哪个模型版本中被引入、为什么引入，以及预期在什么条件下可以撤销。例如：Capybara v8 的虚假声明率从 v4 的 16.7% 上升到 29-30%，因此加入了专项规则；Capybara 默认有过度注释的倾向，因此加入了注释规范的压制规则，计划在模型自然改善后移除。</p>
+</div>
 <p>这些注释揭示了 Anthropic 的 prompt 工程工作流：</p>
 <p><strong>第一步，测量失败率。</strong> 不是凭感觉判断"这个模型有问题"，而是有精确的数字——29-30% 的虚假声明率。这需要有完善的评估基础设施和指标体系。</p>
 <p><strong>第二步，定向打补丁。</strong> 针对特定模型的特定缺陷，加入专项的 prompt 规则。这些规则是<strong>临时的</strong>（注释里写明了退出条件），不是永久性的架构决策。</p>
@@ -1549,9 +1556,10 @@
 </span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">MAX_TOOL_RESULT_TOKENS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">100</span><span class="nx">_000</span>
 </span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">MAX_TOOL_RESULTS_PER_MESSAGE_CHARS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">200</span><span class="nx">_000</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：<code>DEFAULT_MAX_RESULT_SIZE_CHARS</code>：单个工具结果在存入磁盘前的最大字符数；超出时，结果写入文件，模型收到文件路径而非完整内容。<code>MAX_TOOL_RESULT_TOKENS</code>：单个工具结果的 token 上限（约 400KB 文本）。<code>MAX_TOOL_RESULTS_PER_MESSAGE_CHARS</code>：单轮内所有并行工具结果的字符总上限——防止 N 个工具各自返回 40K，合计 400K 塞入同一个 user message。</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p><code>DEFAULT_MAX_RESULT_SIZE_CHARS</code>：单个工具结果在存入磁盘前的最大字符数；超出时，结果写入文件，模型收到文件路径而非完整内容。<code>MAX_TOOL_RESULT_TOKENS</code>：单个工具结果的 token 上限（约 400KB 文本）。<code>MAX_TOOL_RESULTS_PER_MESSAGE_CHARS</code>：单轮内所有并行工具结果的字符总上限——防止 N 个工具各自返回 40K，合计 400K 塞入同一个 user message。</p>
+</div>
 <p>这是 Claude Code 中<strong>唯一真正意义上的 token 预算</strong>——约束的对象是工具结果（下游输出），而非 prompt 各区域的大小（上游分配）。</p>
 <p>理由是清晰的：prompt 各区域的内容由工程师写定，大小相对稳定；而工具结果来自文件系统、命令输出、网络请求，大小不受控，不设 cap 就可能被单次工具调用把整个上下文窗口撑满。</p>
 <h3 id="_2">压缩缓冲：安全边距而非分区上限<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
@@ -1559,9 +1567,10 @@
 <div class="language-typescript highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">AUTOCOMPACT_BUFFER_TOKENS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">13</span><span class="nx">_000</span>
 </span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">MANUAL_COMPACT_BUFFER_TOKENS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">3</span><span class="nx">_000</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：<code>AUTOCOMPACT_BUFFER_TOKENS</code>：自动压缩阈值中预留的缓冲——有效上下文窗口大小 = 模型上下文大小 - 13K。当实际消耗接近有效窗口时，自动触发 compact。<code>MANUAL_COMPACT_BUFFER_TOKENS</code>：未启用自动压缩时，为手动 <code>/compact</code> 命令保留的 3K 缓冲。</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p><code>AUTOCOMPACT_BUFFER_TOKENS</code>：自动压缩阈值中预留的缓冲——有效上下文窗口大小 = 模型上下文大小 - 13K。当实际消耗接近有效窗口时，自动触发 compact。<code>MANUAL_COMPACT_BUFFER_TOKENS</code>：未启用自动压缩时，为手动 <code>/compact</code> 命令保留的 3K 缓冲。</p>
+</div>
 <p>这两个常量是<strong>安全边距</strong>，不是分区配额。含义是"在触发压缩前，留出这一轮 API 请求还能继续工作的空间"。整个上下文窗口被视为统一的空间，不同内容类型之间没有硬性分区。</p>
 <h3 id="_3">实时测量：观测结构而非分配结构<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
 <p><code>src/utils/analyzeContext.ts</code> 实现了一套上下文使用量的实时测量框架，将当前上下文分为多个类别：</p>
@@ -1579,9 +1588,10 @@
 </span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="w">  </span><span class="p">})</span>
 </span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="p">}</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：<code>cats.push()</code> 把各类别的实际消耗量推入数组用于可视化。决定是否触发压缩的逻辑在 autoCompact 模块，依据是<strong>总消耗量</strong>是否接近有效窗口，而非任何单个类别是否超过预算。测量是为了观测，不是为了限流。</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p><code>cats.push()</code> 把各类别的实际消耗量推入数组用于可视化。决定是否触发压缩的逻辑在 autoCompact 模块，依据是<strong>总消耗量</strong>是否接近有效窗口，而非任何单个类别是否超过预算。测量是为了观测，不是为了限流。</p>
+</div>
 <h3 id="toolsearch">ToolSearch 延迟加载：不预分配，按需消费<a class="headerlink" href="#toolsearch" title="Permanent link">&para;</a></h3>
 <p>工具描述的处理有一个值得注意的设计。Claude Code 的内置工具分两类：</p>
 <ul>
@@ -1602,9 +1612,10 @@
 </span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a><span class="w">  </span><span class="mf">0</span><span class="p">,</span>
 </span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a><span class="p">)</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：延迟工具的描述不占用上下文空间，只有在模型实际调用 <code>ToolSearchTool</code> 拉取之后才会进入 context。这是"不预分配、按需消费"的工程体现：工具描述的上下文消耗不在系统启动时固定，而是随实际使用量动态增长。</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p>延迟工具的描述不占用上下文空间，只有在模型实际调用 <code>ToolSearchTool</code> 拉取之后才会进入 context。这是"不预分配、按需消费"的工程体现：工具描述的上下文消耗不在系统启动时固定，而是随实际使用量动态增长。</p>
+</div>
 <h3 id="_4">设计时唯一的结构性决策：静态 / 动态边界<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
 <p>回头看，Claude Code 在设计时做出的、真正影响 token 消耗的结构性决策只有一个：<strong>哪些内容放在 <code>SYSTEM_PROMPT_DYNAMIC_BOUNDARY</code> 之前（静态，全局缓存），哪些放在之后（动态，每次重建）</strong>。</p>
 <p>这个决策的依据不是"静态区域应该占多少 token"，而是"哪些内容足够稳定可以被全局缓存"。系统 prompt 静态区域最终展开成 3,000–4,000 token，是自然的结果，不是预先设定的目标。</p>

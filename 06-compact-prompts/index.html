@@ -1243,8 +1243,8 @@
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>- Tool calls will be REJECTED and will waste your only turn — you will fail the task.
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>- Your entire response must be plain text: an &lt;analysis&gt; block followed by a &lt;summary&gt; block.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p><strong>严重警告</strong>：仅用<strong>纯文字</strong>回应。<strong>不要</strong>调用任何工具。</p>
 <ul>
 <li>不要使用 Read、Bash、Grep、Glob、Edit、Write 或<strong>任何</strong>其他工具。</li>
@@ -1252,7 +1252,7 @@
 <li>工具调用将被<strong>拒绝</strong>，并将浪费你唯一的轮次——你将无法完成任务。</li>
 <li>你的整个回应必须是纯文字：一个 <code>&lt;analysis&gt;</code> 块，然后是一个 <code>&lt;summary&gt;</code> 块。</li>
 </ul>
-</blockquote>
+</div>
 <p><strong>设计解析</strong></p>
 <p><code>NO_TOOLS_PREAMBLE</code> 是整个压缩系统中最具工程性的一段 prompt。它被放在所有压缩 prompt 的<strong>最前面</strong>，而不是最后面，这个位置选择背后有精确的技术原因。</p>
 <p>源代码注释解释了全部背景：</p>
@@ -1308,20 +1308,22 @@
 </span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>   - Pay special attention to specific user feedback that you received, especially if the user told you to do something differently.
 </span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>2. Double-check for technical accuracy and completeness, addressing each required element thoroughly.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>在提供最终摘要之前，将你的分析包裹在 <code>&lt;analysis&gt;</code> 标签中，以整理思路并确保覆盖了所有必要的要点。在分析过程中：</p>
 <ol>
-<li>按时间顺序分析对话的每条消息和每个部分。对每个部分彻底识别：</li>
+<li>按时间顺序分析对话的每条消息和每个部分。对每个部分彻底识别：<ul>
 <li>用户的明确请求和意图</li>
 <li>你处理用户请求的方法</li>
 <li>关键决策、技术概念和代码模式</li>
 <li>具体细节，如：文件名、完整代码片段、函数签名、文件编辑</li>
 <li>你遇到的错误以及如何修复它们</li>
 <li><strong>特别关注</strong>你收到的具体用户反馈，尤其是如果用户告诉你要用不同的方式做某事</li>
+</ul>
+</li>
 <li>仔细检查技术准确性和完整性，彻底处理每个必要元素。</li>
 </ol>
-</blockquote>
+</div>
 <p><strong>设计解析</strong></p>
 <p><strong><code>&lt;analysis&gt;</code> 标签是草稿便签，不是输出内容。</strong> 源代码注释说：</p>
 <div class="language-typescript highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1">// Two variants: BASE scopes to &quot;the conversation&quot;, PARTIAL scopes to &quot;the</span>
@@ -1382,8 +1384,8 @@
 </span><span id="__span-7-31"><a id="__codelineno-7-31" name="__codelineno-7-31" href="#__codelineno-7-31"></a>When you are using compact - please focus on test output and code changes. Include file reads verbatim.
 </span><span id="__span-7-32"><a id="__codelineno-7-32" name="__codelineno-7-32" href="#__codelineno-7-32"></a>&lt;/example&gt;
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>你的任务是创建迄今为止对话的详细摘要，密切关注用户的明确请求和你之前的行动。此摘要在捕捉技术细节、代码模式和架构决策方面应该是全面的，这些对于在不丢失上下文的情况下继续开发工作至关重要。</p>
 <p>你的摘要应包括以下部分：</p>
 <ol>
@@ -1397,7 +1399,7 @@
 <li><strong>当前工作</strong>：详细描述在此摘要请求之前正在进行的工作，特别关注用户和助手的最新消息。在适用时包含文件名和代码片段。</li>
 <li><strong>可选的下一步</strong>：列出与你最近工作相关的下一步。重要：确保此步骤与用户最近的明确请求和你在此摘要请求之前正在处理的任务<strong>直接</strong>一致。如果下一步存在，包含来自最近对话的<strong>直接引用</strong>，准确显示你正在处理的任务和你停下来的地方。这应该是逐字引用，以确保任务解释没有漂移。</li>
 </ol>
-</blockquote>
+</div>
 <p><strong>设计解析</strong></p>
 <p>9 个 Section 的设计不是随机排列——它们构成了一个从<strong>背景 → 状态 → 续接</strong>的信息漏斗。</p>
 <p><strong>Section 1-5：背景信息层</strong></p>
@@ -1432,11 +1434,11 @@
 </span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>
 </span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>Please provide your summary based on the RECENT messages only (after the retained earlier context), following this structure and ensuring precision and thoroughness in your response.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>你的任务是创建对话<strong>最近部分</strong>的详细摘要——跟在之前保留的上下文之后的消息。之前的消息保持完整，<strong>不需要</strong>摘要。只关注最近消息中讨论、学习和完成的内容。</p>
 <p>请仅基于<strong>最近的消息</strong>（在保留的早期上下文之后）提供你的摘要。</p>
-</blockquote>
+</div>
 <p><strong>设计解析</strong></p>
 <p>局部压缩（<code>PARTIAL_COMPACT_PROMPT</code>，对应 <code>direction: 'from'</code>）解决了这样一个场景：对话历史很长，但已经有了一个"压缩边界"——边界之前的内容已经被摘要过，边界之后的新内容需要被摘要并合并。</p>
 <p>这种场景下，全量压缩 BASE 的问题是：它会把已经摘要过的旧摘要再次摘要，层层套叠，逐渐失真。PARTIAL 的设计是"只摘要新部分"，保留旧部分的摘要不动，然后把两者拼接起来。</p>
@@ -1460,11 +1462,11 @@
 </span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a>8. Work Completed: Describe what was accomplished by the end of this portion.
 </span><span id="__span-13-15"><a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a>9. Context for Continuing Work: Summarize any context, decisions, or state that would be needed to understand and continue the work in subsequent messages.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p>你的任务是创建对话的详细摘要。此摘要将被放置在继续会话的<strong>开头</strong>；在此上下文之后，建立在此基础上的<strong>更新的消息</strong>将随之而来（你在这里看不到它们）。彻底摘要，以便只阅读你的摘要然后阅读更新消息的人能够完全理解发生了什么，并继续工作。</p>
 <p>第 9 节（最大不同）：<strong>继续工作的上下文</strong>：总结理解和继续后续消息中的工作所需的任何上下文、决策或状态。</p>
-</blockquote>
+</div>
 <p><strong>设计解析</strong></p>
 <p><code>PARTIAL_COMPACT_UP_TO_PROMPT</code>（<code>direction: 'up_to'</code>）是三个变体中最特殊的，因为它的信息流方向与另外两个相反。</p>
 <p>理解它需要先理解"up_to"压缩的使用场景。代码注释说：</p>
@@ -1488,10 +1490,10 @@
 <p><strong>英文原文</strong>（来源：<code>src/services/compact/prompt.ts</code>，第 269–272 行）</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>REMINDER: Do NOT call any tools. Respond with plain text only — an &lt;analysis&gt; block followed by a &lt;summary&gt; block. Tool calls will be rejected and you will fail the task.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p><strong>提醒</strong>：<strong>不要</strong>调用任何工具。仅用纯文字回应——一个 <code>&lt;analysis&gt;</code> 块，然后是一个 <code>&lt;summary&gt;</code> 块。工具调用将被拒绝，你将无法完成任务。</p>
-</blockquote>
+</div>
 <p><strong>设计解析</strong></p>
 <p>TRAILER 是 PREAMBLE 的回响。完整的压缩 prompt 结构是：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>NO_TOOLS_PREAMBLE（最前）
@@ -1575,12 +1577,12 @@
 </span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>working autonomously before compaction. Continue your work loop: pick up where you left off
 </span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>based on the summary above. Do not greet the user or ask what to work on.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：</p>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
 <p><strong>模式 A（基础）</strong>：本会话从之前因上下文耗尽而结束的对话继续。以下摘要涵盖了对话的早期部分。如果需要压缩前的具体细节，请读取完整记录于：[路径]</p>
 <p><strong>模式 B（自动续接）</strong>：在模式 A 基础上追加：不询问用户任何进一步问题，直接继续。不要确认摘要，不要重述正在发生的事情，不要以"我将继续"等开头。就像这个间断从未发生过一样接着最后的任务。</p>
 <p><strong>模式 C（自主模式续接）</strong>：在模式 B 基础上追加：你正在自主/主动模式下运行。这<strong>不是</strong>首次唤醒——在压缩之前你已经在自主工作。继续你的工作循环：根据上面的摘要从你停下的地方继续。不要问候用户或询问要做什么。</p>
-</blockquote>
+</div>
 <p><strong>设计解析</strong></p>
 <p><strong>Transcript 路径的设计</strong> 解决了摘要不可避免的信息损失问题。任何摘要都会丢失一些细节，模型可能在续接时需要查阅具体的原始内容（如一段被修改的代码的完整版本）。提供 transcript 路径并告知模型可以通过 Read 工具访问，相当于给了模型一个"查阅原始记录"的逃生通道——当摘要里的信息不够用时，不必依赖幻觉，可以去查原始对话。</p>
 <p><strong>"Recent messages are preserved verbatim"</strong> 是局部压缩的信号。当近期消息被原样保留（不摘要）时，这条说明告诉模型：你下面看到的消息内容是完整的，不是被摘要过的。这防止了模型错误地把近期消息也视为"可能不完整的摘要"。</p>
@@ -1637,9 +1639,10 @@
 <p><strong>英文原文</strong>（来源：<code>src/services/compact/microCompact.ts</code>，第 36 行）</p>
 <div class="language-typescript highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">TIME_BASED_MC_CLEARED_MESSAGE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;[Old tool result content cleared]&#39;</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：[旧工具结果内容已清除]</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p>[旧工具结果内容已清除]</p>
+</div>
 <p>这是出现在被清除工具结果位置的占位文字。第四章（4.13 节）分析的 <code>SUMMARIZE_TOOL_RESULTS_SECTION</code> 就是为了应对这个机制——提前告诉模型"工具结果可能被清除"，让模型主动在文字输出里记录重要信息。</p>
 <p><strong>设计解析</strong></p>
 <p><strong>COMPACTABLE_TOOLS 的边界</strong> 定义了哪些工具的结果可以被微压缩：</p>

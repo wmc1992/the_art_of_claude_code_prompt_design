@@ -1088,9 +1088,10 @@
 </span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="p">,</span><span class="w"> </span><span class="nx">compute</span><span class="p">,</span><span class="w"> </span><span class="nx">cacheBreak</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="w"> </span><span class="p">}</span>
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="p">}</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：创建一个记忆化的 system prompt 节。计算一次后缓存，直到 <code>/clear</code> 或 <code>/compact</code> 命令被执行时才重新计算。</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p>创建一个记忆化的 system prompt 节。计算一次后缓存，直到 <code>/clear</code> 或 <code>/compact</code> 命令被执行时才重新计算。</p>
+</div>
 <p><strong><code>DANGEROUS_uncachedSystemPromptSection</code></strong>（易失版）</p>
 <div class="language-typescript highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="cm">/**</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="cm"> * Create a volatile system prompt section that recomputes every turn.</span>
@@ -1105,9 +1106,10 @@
 </span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="p">,</span><span class="w"> </span><span class="nx">compute</span><span class="p">,</span><span class="w"> </span><span class="nx">cacheBreak</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="w"> </span><span class="p">}</span>
 </span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="p">}</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：创建一个每轮都重新计算的易失节。当值发生变化时，<strong>这将会打破 prompt cache</strong>。要求提供一个理由字符串，解释为什么必须打破缓存。</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p>创建一个每轮都重新计算的易失节。当值发生变化时，<strong>这将会打破 prompt cache</strong>。要求提供一个理由字符串，解释为什么必须打破缓存。</p>
+</div>
 <p>注意两个设计细节：</p>
 <p><strong>第一，函数名使用全大写 <code>DANGEROUS</code>。</strong> 这不是随意的命名风格，而是一个刻意的警告信号——调用这个函数的开发者必须意识到，他们正在做一个有性能代价的决定。在一个有数十个 Section 的系统里，如果开发者不假思索地把所有 Section 都设为易失，就会导致 prompt cache 完全失效，每次 API 调用都要重新处理全部 token。</p>
 <p><strong>第二，<code>_reason</code> 参数在函数体内未被使用（下划线前缀表示有意忽略）。</strong> 它存在的唯一目的是强制调用者写出理由。这是一种代码层面的文档约束——你不是在告诉运行时为什么，而是在告诉下一个阅读这段代码的人为什么。比如：</p>
@@ -1124,9 +1126,10 @@
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>// Gate check inside compute (not selecting between section variants)
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>// so a mid-session gate flip doesn&#39;t read a stale cached value.
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：当 delta 功能启用时，指令通过持久化的 <code>mcp_instructions_delta</code> 附件（attachments.ts）来传达，而不是用这个每轮重算的方式——因为后者会在 MCP 服务器延迟连接时打破 prompt cache。检查 gate 条件放在 compute 函数内部（而非在两个 section 变体之间选择），是为了防止在会话中途的 gate 切换读到过期的缓存值。</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p>当 delta 功能启用时，指令通过持久化的 <code>mcp_instructions_delta</code> 附件（attachments.ts）来传达，而不是用这个每轮重算的方式——因为后者会在 MCP 服务器延迟连接时打破 prompt cache。检查 gate 条件放在 compute 函数内部（而非在两个 section 变体之间选择），是为了防止在会话中途的 gate 切换读到过期的缓存值。</p>
+</div>
 <p>这段注释展示了 Anthropic 工程师的思考层次：他们不只是"MCP 在运行时可能变化，所以用易失 Section"，而是精确地分析了在什么条件下易失是必要的（MCP 服务器的晚期连接），并且在更优解可用时（<code>delta</code> 机制）转向它。这种对缓存成本的精细核算贯穿了整个 prompt 工程的实现。</p>
 <hr />
 <h2 id="23-section">2.3 Section 的解析：缓存优先<a class="headerlink" href="#23-section" title="Permanent link">&para;</a></h2>
@@ -1151,9 +1154,10 @@
 </span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="w">  </span><span class="p">)</span>
 </span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="p">}</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：解析所有 system prompt 节，返回 prompt 字符串数组。对每个 section，如果它不是易失的（<code>!s.cacheBreak</code>）且缓存中有值，则直接返回缓存；否则调用 <code>compute()</code> 函数重新计算，并将结果存入缓存。</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p>解析所有 system prompt 节，返回 prompt 字符串数组。对每个 section，如果它不是易失的（<code>!s.cacheBreak</code>）且缓存中有值，则直接返回缓存；否则调用 <code>compute()</code> 函数重新计算，并将结果存入缓存。</p>
+</div>
 <p>这段代码很简洁，但逻辑层次清晰：</p>
 <ol>
 <li>获取当前的 Section 缓存（存储在全局 state 中，随 <code>/clear</code> 或 <code>/compact</code> 重置）</li>
@@ -1177,9 +1181,10 @@
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">SYSTEM_PROMPT_DYNAMIC_BOUNDARY</span><span class="w"> </span><span class="o">=</span>
 </span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">  </span><span class="s1">&#39;__SYSTEM_PROMPT_DYNAMIC_BOUNDARY__&#39;</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：分隔静态内容（可跨组织缓存）和动态内容的边界标记。此标记<strong>之前</strong>的所有内容可以使用 <code>scope: 'global'</code>（全局缓存）。此标记<strong>之后</strong>的内容包含用户/会话特定信息，不应被缓存。<strong>警告</strong>：在不更新 <code>src/utils/api.ts</code> 和 <code>src/services/api/claude.ts</code> 中相关缓存逻辑的情况下，不得移除或重新排序此标记。</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p>分隔静态内容（可跨组织缓存）和动态内容的边界标记。此标记<strong>之前</strong>的所有内容可以使用 <code>scope: 'global'</code>（全局缓存）。此标记<strong>之后</strong>的内容包含用户/会话特定信息，不应被缓存。<strong>警告</strong>：在不更新 <code>src/utils/api.ts</code> 和 <code>src/services/api/claude.ts</code> 中相关缓存逻辑的情况下，不得移除或重新排序此标记。</p>
+</div>
 <p>这个注释的最后一行是工程纪律的体现：这个字符串常量不只是一个占位符，它在运行时被代码逻辑识别和处理，牵连着两个文件中的缓存构建逻辑。移动它不是在改文字，而是在改系统行为。</p>
 <p><strong>静态内容</strong>（边界之前）是那些在同一版本的 Claude Code 里几乎不会变化的指令：角色定义、工具使用规范、代码风格要求、安全约束。这些内容可以使用 <code>scope: 'global'</code>，意味着它们的缓存可以跨不同用户、不同组织共享——只要使用相同版本的 Claude Code，任何人第一次调用时都会计算，之后所有人都能命中缓存。</p>
 <p><strong>动态内容</strong>（边界之后）是那些随用户或会话变化的信息：当前工作目录、操作系统版本、用户的语言偏好、记忆内容、MCP 服务器指令。这些内容只能做会话级缓存，不能跨用户共享。</p>
@@ -1205,9 +1210,10 @@
 </span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="w">  </span><span class="p">...</span><span class="nx">resolvedDynamicSections</span><span class="p">,</span>
 </span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="p">].</span><span class="nx">filter</span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">s</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：最终返回值是一个字符串数组，由静态内容和动态内容两部分组成，以边界标记分隔。<code>null</code> 值在最后被过滤掉，因此不适用的 Section 自动从最终 prompt 中消失。</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p>最终返回值是一个字符串数组，由静态内容和动态内容两部分组成，以边界标记分隔。<code>null</code> 值在最后被过滤掉，因此不适用的 Section 自动从最终 prompt 中消失。</p>
+</div>
 <p>几个值得注意的细节：</p>
 <p><strong>第一，<code>getSimpleDoingTasksSection()</code> 的条件判断</strong>。当用户设置了自定义输出风格（<code>outputStyleConfig !== null</code>），并且该风格的 <code>keepCodingInstructions</code> 不为 <code>true</code> 时，整个编码规范 Section 都会被省略。这说明 prompt 的某些组成部分是可以被用户自定义的输出风格完全替换掉的。</p>
 <p><strong>第二，<code>shouldUseGlobalCacheScope()</code> 的条件判断</strong>。边界标记并非在所有情况下都插入——它只在全局缓存 scope 被支持时才出现。这意味着在某些配置（比如不支持全局缓存的部署环境）下，整个静态/动态分层机制会退化为更简单的形式。</p>
@@ -1233,9 +1239,10 @@
 </span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="w">  </span><span class="p">].</span><span class="nx">filter</span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">s</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span>
 </span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="p">}</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：当自主模式（PROACTIVE 或 KAIROS feature flag）激活时，系统 prompt 走完全不同的路径，返回一套精简版的自主模式专用 prompt，角色定义简化为"你是一个自主 Agent，使用可用工具做有用的工作"，并附加自主模式特有的行为指南节（<code>getProactiveSection()</code>）。</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p>当自主模式（PROACTIVE 或 KAIROS feature flag）激活时，系统 prompt 走完全不同的路径，返回一套精简版的自主模式专用 prompt，角色定义简化为"你是一个自主 Agent，使用可用工具做有用的工作"，并附加自主模式特有的行为指南节（<code>getProactiveSection()</code>）。</p>
+</div>
 <p>这一设计说明：<strong>Claude Code 不是"同一个 AI 在不同场景下"，而是在不同配置下使用完全不同的 prompt 体系</strong>。普通模式的 prompt 强调谨慎、确认、不越权；自主模式的 prompt 强调行动、主动探索、减少停顿。这两套 prompt 体系从角色定义就开始分叉，不存在共用的"基础版本"。</p>
 <hr />
 <h2 id="27-prompt">2.7 工具级 Prompt<a class="headerlink" href="#27-prompt" title="Permanent link">&para;</a></h2>
@@ -1247,9 +1254,10 @@
 </span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="sb">- Use this tool when you need to find files by name patterns</span>
 </span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="sb">- When you are doing an open ended search that may require multiple rounds of globbing and grepping, use the Agent tool instead`</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：快速文件模式匹配工具，适用于任何规模的代码库。支持 glob 模式，如 <code>**/*.js</code> 或 <code>src/**/*.ts</code>。返回按修改时间排序的匹配文件路径。当需要通过文件名模式查找文件时使用此工具。当进行需要多轮 glob 和 grep 的开放式搜索时，改用 Agent 工具。</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p>快速文件模式匹配工具，适用于任何规模的代码库。支持 glob 模式，如 <code>**/*.js</code> 或 <code>src/**/*.ts</code>。返回按修改时间排序的匹配文件路径。当需要通过文件名模式查找文件时使用此工具。当进行需要多轮 glob 和 grep 的开放式搜索时，改用 Agent 工具。</p>
+</div>
 <p>GrepTool 的 description 更复杂，还包含了使用约束（<code>src/tools/GrepTool/prompt.ts</code>）：</p>
 <div class="language-typescript highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">getDescription</span><span class="p">()</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="sb">`A powerful search tool built on ripgrep</span>
@@ -1265,9 +1273,10 @@
 </span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="sb">`</span>
 </span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="p">}</span>
 </span></code></pre></div>
-<blockquote>
-<p><strong>中文附注</strong>：基于 ripgrep 的强大搜索工具。使用说明：搜索任务<strong>始终</strong>使用 Grep 工具，<strong>绝不</strong>通过 Bash 命令调用 <code>grep</code> 或 <code>rg</code>，Grep 工具已针对正确的权限和访问做了优化。支持完整正则语法。可通过 glob 或文件类型过滤。多种输出模式：<code>content</code> 显示匹配行，<code>files_with_matches</code> 只显示文件路径（默认），<code>count</code> 显示匹配数量。开放式多轮搜索使用 Agent 工具。模式语法使用 ripgrep 规则（非 grep）——字面大括号需要转义。多行匹配默认仅在单行内匹配，跨行模式需设置 <code>multiline: true</code>。</p>
-</blockquote>
+<div class="admonition note">
+<p class="admonition-title">中文附注</p>
+<p>基于 ripgrep 的强大搜索工具。使用说明：搜索任务<strong>始终</strong>使用 Grep 工具，<strong>绝不</strong>通过 Bash 命令调用 <code>grep</code> 或 <code>rg</code>，Grep 工具已针对正确的权限和访问做了优化。支持完整正则语法。可通过 glob 或文件类型过滤。多种输出模式：<code>content</code> 显示匹配行，<code>files_with_matches</code> 只显示文件路径（默认），<code>count</code> 显示匹配数量。开放式多轮搜索使用 Agent 工具。模式语法使用 ripgrep 规则（非 grep）——字面大括号需要转义。多行匹配默认仅在单行内匹配，跨行模式需设置 <code>multiline: true</code>。</p>
+</div>
 <p>注意 GrepTool 的写法：它不仅说"我是什么"，还明确说"什么情况下<strong>不该</strong>用我（转而用 Agent 工具）"以及"ALWAYS...NEVER"这种强约束。</p>
 <p>以 FileReadTool 为例，其 <code>prompt.ts</code> 会生成这样的内容：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>Reads a file from the local filesystem. You can access any file directly by using this tool.
