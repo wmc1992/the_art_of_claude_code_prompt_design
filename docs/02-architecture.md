@@ -57,7 +57,9 @@ export function systemPromptSection(
 }
 ```
 
-> **中文附注**：创建一个记忆化的 system prompt 节。计算一次后缓存，直到 `/clear` 或 `/compact` 命令被执行时才重新计算。
+!!! note "中文附注"
+
+    创建一个记忆化的 system prompt 节。计算一次后缓存，直到 `/clear` 或 `/compact` 命令被执行时才重新计算。
 
 **`DANGEROUS_uncachedSystemPromptSection`**（易失版）
 
@@ -76,7 +78,9 @@ export function DANGEROUS_uncachedSystemPromptSection(
 }
 ```
 
-> **中文附注**：创建一个每轮都重新计算的易失节。当值发生变化时，**这将会打破 prompt cache**。要求提供一个理由字符串，解释为什么必须打破缓存。
+!!! note "中文附注"
+
+    创建一个每轮都重新计算的易失节。当值发生变化时，**这将会打破 prompt cache**。要求提供一个理由字符串，解释为什么必须打破缓存。
 
 注意两个设计细节：
 
@@ -102,7 +106,9 @@ DANGEROUS_uncachedSystemPromptSection(
 // so a mid-session gate flip doesn't read a stale cached value.
 ```
 
-> **中文附注**：当 delta 功能启用时，指令通过持久化的 `mcp_instructions_delta` 附件（attachments.ts）来传达，而不是用这个每轮重算的方式——因为后者会在 MCP 服务器延迟连接时打破 prompt cache。检查 gate 条件放在 compute 函数内部（而非在两个 section 变体之间选择），是为了防止在会话中途的 gate 切换读到过期的缓存值。
+!!! note "中文附注"
+
+    当 delta 功能启用时，指令通过持久化的 `mcp_instructions_delta` 附件（attachments.ts）来传达，而不是用这个每轮重算的方式——因为后者会在 MCP 服务器延迟连接时打破 prompt cache。检查 gate 条件放在 compute 函数内部（而非在两个 section 变体之间选择），是为了防止在会话中途的 gate 切换读到过期的缓存值。
 
 这段注释展示了 Anthropic 工程师的思考层次：他们不只是"MCP 在运行时可能变化，所以用易失 Section"，而是精确地分析了在什么条件下易失是必要的（MCP 服务器的晚期连接），并且在更优解可用时（`delta` 机制）转向它。这种对缓存成本的精细核算贯穿了整个 prompt 工程的实现。
 
@@ -134,7 +140,9 @@ export async function resolveSystemPromptSections(
 }
 ```
 
-> **中文附注**：解析所有 system prompt 节，返回 prompt 字符串数组。对每个 section，如果它不是易失的（`!s.cacheBreak`）且缓存中有值，则直接返回缓存；否则调用 `compute()` 函数重新计算，并将结果存入缓存。
+!!! note "中文附注"
+
+    解析所有 system prompt 节，返回 prompt 字符串数组。对每个 section，如果它不是易失的（`!s.cacheBreak`）且缓存中有值，则直接返回缓存；否则调用 `compute()` 函数重新计算，并将结果存入缓存。
 
 这段代码很简洁，但逻辑层次清晰：
 
@@ -166,7 +174,9 @@ export const SYSTEM_PROMPT_DYNAMIC_BOUNDARY =
   '__SYSTEM_PROMPT_DYNAMIC_BOUNDARY__'
 ```
 
-> **中文附注**：分隔静态内容（可跨组织缓存）和动态内容的边界标记。此标记**之前**的所有内容可以使用 `scope: 'global'`（全局缓存）。此标记**之后**的内容包含用户/会话特定信息，不应被缓存。**警告**：在不更新 `src/utils/api.ts` 和 `src/services/api/claude.ts` 中相关缓存逻辑的情况下，不得移除或重新排序此标记。
+!!! note "中文附注"
+
+    分隔静态内容（可跨组织缓存）和动态内容的边界标记。此标记**之前**的所有内容可以使用 `scope: 'global'`（全局缓存）。此标记**之后**的内容包含用户/会话特定信息，不应被缓存。**警告**：在不更新 `src/utils/api.ts` 和 `src/services/api/claude.ts` 中相关缓存逻辑的情况下，不得移除或重新排序此标记。
 
 这个注释的最后一行是工程纪律的体现：这个字符串常量不只是一个占位符，它在运行时被代码逻辑识别和处理，牵连着两个文件中的缓存构建逻辑。移动它不是在改文字，而是在改系统行为。
 
@@ -202,7 +212,9 @@ return [
 ].filter(s => s !== null)
 ```
 
-> **中文附注**：最终返回值是一个字符串数组，由静态内容和动态内容两部分组成，以边界标记分隔。`null` 值在最后被过滤掉，因此不适用的 Section 自动从最终 prompt 中消失。
+!!! note "中文附注"
+
+    最终返回值是一个字符串数组，由静态内容和动态内容两部分组成，以边界标记分隔。`null` 值在最后被过滤掉，因此不适用的 Section 自动从最终 prompt 中消失。
 
 几个值得注意的细节：
 
@@ -238,7 +250,9 @@ if (
 }
 ```
 
-> **中文附注**：当自主模式（PROACTIVE 或 KAIROS feature flag）激活时，系统 prompt 走完全不同的路径，返回一套精简版的自主模式专用 prompt，角色定义简化为"你是一个自主 Agent，使用可用工具做有用的工作"，并附加自主模式特有的行为指南节（`getProactiveSection()`）。
+!!! note "中文附注"
+
+    当自主模式（PROACTIVE 或 KAIROS feature flag）激活时，系统 prompt 走完全不同的路径，返回一套精简版的自主模式专用 prompt，角色定义简化为"你是一个自主 Agent，使用可用工具做有用的工作"，并附加自主模式特有的行为指南节（`getProactiveSection()`）。
 
 这一设计说明：**Claude Code 不是"同一个 AI 在不同场景下"，而是在不同配置下使用完全不同的 prompt 体系**。普通模式的 prompt 强调谨慎、确认、不越权；自主模式的 prompt 强调行动、主动探索、减少停顿。这两套 prompt 体系从角色定义就开始分叉，不存在共用的"基础版本"。
 
@@ -258,7 +272,9 @@ export const DESCRIPTION = `- Fast file pattern matching tool that works with an
 - When you are doing an open ended search that may require multiple rounds of globbing and grepping, use the Agent tool instead`
 ```
 
-> **中文附注**：快速文件模式匹配工具，适用于任何规模的代码库。支持 glob 模式，如 `**/*.js` 或 `src/**/*.ts`。返回按修改时间排序的匹配文件路径。当需要通过文件名模式查找文件时使用此工具。当进行需要多轮 glob 和 grep 的开放式搜索时，改用 Agent 工具。
+!!! note "中文附注"
+
+    快速文件模式匹配工具，适用于任何规模的代码库。支持 glob 模式，如 `**/*.js` 或 `src/**/*.ts`。返回按修改时间排序的匹配文件路径。当需要通过文件名模式查找文件时使用此工具。当进行需要多轮 glob 和 grep 的开放式搜索时，改用 Agent 工具。
 
 GrepTool 的 description 更复杂，还包含了使用约束（`src/tools/GrepTool/prompt.ts`）：
 
@@ -278,7 +294,9 @@ export function getDescription(): string {
 }
 ```
 
-> **中文附注**：基于 ripgrep 的强大搜索工具。使用说明：搜索任务**始终**使用 Grep 工具，**绝不**通过 Bash 命令调用 `grep` 或 `rg`，Grep 工具已针对正确的权限和访问做了优化。支持完整正则语法。可通过 glob 或文件类型过滤。多种输出模式：`content` 显示匹配行，`files_with_matches` 只显示文件路径（默认），`count` 显示匹配数量。开放式多轮搜索使用 Agent 工具。模式语法使用 ripgrep 规则（非 grep）——字面大括号需要转义。多行匹配默认仅在单行内匹配，跨行模式需设置 `multiline: true`。
+!!! note "中文附注"
+
+    基于 ripgrep 的强大搜索工具。使用说明：搜索任务**始终**使用 Grep 工具，**绝不**通过 Bash 命令调用 `grep` 或 `rg`，Grep 工具已针对正确的权限和访问做了优化。支持完整正则语法。可通过 glob 或文件类型过滤。多种输出模式：`content` 显示匹配行，`files_with_matches` 只显示文件路径（默认），`count` 显示匹配数量。开放式多轮搜索使用 Agent 工具。模式语法使用 ripgrep 规则（非 grep）——字面大括号需要转义。多行匹配默认仅在单行内匹配，跨行模式需设置 `multiline: true`。
 
 注意 GrepTool 的写法：它不仅说"我是什么"，还明确说"什么情况下**不该**用我（转而用 Agent 工具）"以及"ALWAYS...NEVER"这种强约束。
 
